@@ -1,0 +1,4 @@
+id,candidate_id,qplume,name,folder,date,datetime,window_col_off,window_row_off,window_width,window_height,subset,difficulty,label_path,has_plume,window_labels
+ang20191018t141549_r6656_c0_w512_h512,,0,ang20191018t141549,/AVIRISNG/Permian2019/ang20191018t141549_r6656_c0_w512_h512,18/10/2019,2019-10-18 14:15:49+00:00,0,0,512,512,test,random,,False,"Window(col_off=0, row_off=0, width=512, height=512)"
+ang20191018t144405_r16384_c256_w512_h512,,0,ang20191018t144405,/AVIRISNG/Permian2019/ang20191018t144405_r16384_c256_w512_h512,18/10/2019,2019-10-18 14:44:05+00:00,0,0,512,512,test,hard,,False,"Window(col_off=0, row_off=0, width=512, height=512)"
+ang20191018t144405_r15616_c256_w512_h512,,0,ang20191018t144405,/AVIRISNG/Permian2019/ang20191018t144405_r15616_c256_w512_h512,18/10/2019,2019-10-18 14:44:05+00:00,0,0,512,512,test,hard,,False,"Window(col_off=0, row_off=0, width=512, height=512)"
