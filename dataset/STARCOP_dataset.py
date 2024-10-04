@@ -5,6 +5,7 @@ import cv2
 import pandas as pd
 
 from enum import Enum
+from dataset_info import DatasetInfo
 
 
 class DatasetType(Enum):
@@ -14,6 +15,9 @@ class DatasetType(Enum):
 
     def describe(self):
         return f"Dataset is in state: {self.name}"
+    
+    def get_folder_name(self):
+        return f"STARCOP_{self.name}"
 
 
 class STARCOPDataset:
@@ -21,7 +25,7 @@ class STARCOPDataset:
     Class is used for custom dataloader. Loads images based on CSV description of data.
     """
     def __init__(self, data_path: str, data_type: DatasetType):
-        self.images_path = os.path.join(data_path, "STARCOP_" + data_type.value, "STARCOP_" + data_type.value)
+        self.images_path = os.path.join(data_path, data_type.get_folder_name(), data_type.get_folder_name())
         self.csv = pd.read_csv(os.path.join(data_path, data_type.value + ".csv"))
 
     def __len__(self):
@@ -46,5 +50,5 @@ class STARCOPDataset:
             "label_string": self.csv["has_plume"][index]
         }
 
-        return images_AVIRIS, images_WV3, mag1c, labels
+        return DatasetInfo(images_AVIRIS, images_WV3, mag1c, labels)
 

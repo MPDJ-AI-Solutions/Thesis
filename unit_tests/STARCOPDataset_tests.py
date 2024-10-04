@@ -22,23 +22,23 @@ class MyTestCase(unittest.TestCase):
                                  data_type=DatasetType.UNITTEST)
 
         # Act
-        images_a, images_w, mag1c, labels = dataset.__getitem__(0)
+        dataset_info = dataset.__getitem__(0)
 
         # Assert
         # Images AVIRIS
-        self.assertEqual(len(images_a), 8)
+        self.assertEqual(len(dataset_info.images_AVIRIS), 8)
 
         # Images WorldView3
-        self.assertEqual(len(images_w), 8)
+        self.assertEqual(len(dataset_info.images_WV3), 8)
 
         # Images mag1c
-        self.assertIn("weight", mag1c.keys())
-        self.assertIn("mag1c", mag1c.keys())
+        self.assertIn("weight", dataset_info.mag1c.keys())
+        self.assertIn("mag1c", dataset_info.mag1c.keys())
 
         # Labels
-        self.assertIn("label_rgba", labels.keys())
-        self.assertIn("label_binary", labels.keys())
-        self.assertIn("label_string", labels.keys())
+        self.assertIn("label_rgba", dataset_info.labels.keys())
+        self.assertIn("label_binary", dataset_info.labels.keys())
+        self.assertIn("label_string", dataset_info.labels.keys())
 
 
 if __name__ == '__main__':
