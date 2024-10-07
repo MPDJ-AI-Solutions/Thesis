@@ -4,20 +4,8 @@ import os
 import cv2
 import pandas as pd
 
-from enum import Enum
-from dataset_info import DatasetInfo
-
-
-class DatasetType(Enum):
-    TRAIN = "train"
-    TEST = "test"
-    UNITTEST = "ut"
-
-    def describe(self):
-        return f"Dataset is in state: {self.name}"
-    
-    def get_folder_name(self):
-        return f"STARCOP_{self.name}"
+from .dataset_info import DatasetInfo
+from .dataset_type import DatasetType
 
 
 class STARCOPDataset:
@@ -34,21 +22,27 @@ class STARCOPDataset:
     def __getitem__(self, index):
         images_directory_path = os.path.join(self.images_path, self.csv["id"][index])
 
-        images_AVIRIS = [cv2.imread(file, cv2.IMREAD_UNCHANGED) for file
-                         in glob.glob(os.path.join(images_directory_path, "TOA_AVIRIS*.tif"))]
-        images_WV3 = [cv2.imread(file, cv2.IMREAD_UNCHANGED) for file
-                      in glob.glob(os.path.join(images_directory_path, "TOA_WV3*.tif"))]
-
-        mag1c = {
-            "weight": cv2.imread(os.path.join(images_directory_path, "weight_mag1c.tif"), cv2.IMREAD_UNCHANGED),
-            "mag1c": cv2.imread(os.path.join(images_directory_path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
-        }
-
-        labels = {
-            "label_rgba": cv2.imread(os.path.join(images_directory_path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED),
-            "label_binary": cv2.imread(os.path.join(images_directory_path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED),
-            "label_string": self.csv["has_plume"][index]
-        }
+        images_AVIRIS = self.load_images(images_directory_path, "TOA_AVIRIS*.tif")
+        images_WV3 = self.load_images(images_directory_path, "TOA_WV3*.tif")
+        mag1c = self.load_mag1c(images_directory_path)
+        labels = self.load_labels(images_directory_path, index)
 
         return DatasetInfo(images_AVIRIS, images_WV3, mag1c, labels)
 
+    @staticmethod
+    def load_images(path: str, pattern: str):
+        return [cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, pattern))]
+
+    @staticmethod
+    def load_mag1c(path: str):
+        return {
+            "weight": cv2.imread(os.path.join(path, "weight_mag1c.tif"), cv2.IMREAD_UNCHANGED),
+            "mag1c": cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
+        }
+
+    def load_labels(self, path: str, index: int):
+        return {
+            "label_rgba": cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED),
+            "label_binary": cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED),
+            "label_string": self.csv["has_plume"][index]
+        }
