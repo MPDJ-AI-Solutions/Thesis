@@ -4,11 +4,12 @@ import os
 import cv2
 import pandas as pd
 
-from .dataset_info import DatasetInfo
+from torch.utils.data import Dataset
+from .dataset_info import SpectralImageInfo
 from .dataset_type import DatasetType
 
 
-class STARCOPDataset:
+class STARCOPDataset(Dataset):
     """
     Class is used for custom dataloader. Loads images based on CSV description of data.
     """
@@ -27,7 +28,7 @@ class STARCOPDataset:
         mag1c = self.load_mag1c(images_directory_path)
         labels = self.load_labels(images_directory_path, index)
 
-        return DatasetInfo(images_AVIRIS, images_WV3, mag1c, labels)
+        return SpectralImageInfo(images_AVIRIS, images_WV3, mag1c, labels).to_tensor()
 
     @staticmethod
     def load_images(path: str, pattern: str):
@@ -44,5 +45,5 @@ class STARCOPDataset:
         return {
             "label_rgba": cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED),
             "label_binary": cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED),
-            "label_string": self.csv["has_plume"][index]
+            #"label_string": 1.0 if self.csv["has_plume"][index] == "True" else 0.0,
         }

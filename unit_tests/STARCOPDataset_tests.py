@@ -3,7 +3,7 @@ import unittest
 from dataset.STARCOP_dataset import STARCOPDataset, DatasetType
 
 
-class MyTestCase(unittest.TestCase):
+class STARCOPDatasetTests(unittest.TestCase):
     def test_STARCOPDataset_correct_length(self):
         # Arrange
         dataset = STARCOPDataset(data_path=r"data",
