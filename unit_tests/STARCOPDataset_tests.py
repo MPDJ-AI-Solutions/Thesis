@@ -1,44 +1,30 @@
+import os
 import unittest
+from unittest.mock import patch, MagicMock
+
+import pandas as pd
 
 from dataset.STARCOP_dataset import STARCOPDataset, DatasetType
+from dataset.dataset_info import SpectralImageInfo
 
 
 class STARCOPDatasetTests(unittest.TestCase):
-    def test_STARCOPDataset_correct_length(self):
+    def test_STARCOPDataset_correct_path(self):
         # Arrange
+        class TestSpectralImageInfo(SpectralImageInfo):
+            @staticmethod
+            def load_tensor(path: str):
+                return path
+
         dataset = STARCOPDataset(data_path=r"data",
-                                 data_type=DatasetType.UNITTEST)
-        expected_length = 3
+                                 data_type=DatasetType.UNITTEST,
+                                 image_info_class=TestSpectralImageInfo)
 
         # Act
-        length = dataset.__len__()
+        path = dataset.__getitem__(0)
 
         # Assert
-        self.assertEqual(length, expected_length)
-
-    def test_STARCOPDataset_get_item(self):
-        # Arrange
-        dataset = STARCOPDataset(data_path=r"data",
-                                 data_type=DatasetType.UNITTEST)
-
-        # Act
-        dataset_info = dataset.__getitem__(0)
-
-        # Assert
-        # Images AVIRIS
-        self.assertEqual(len(dataset_info.images_AVIRIS), 8)
-
-        # Images WorldView3
-        self.assertEqual(len(dataset_info.images_WV3), 8)
-
-        # Images mag1c
-        self.assertIn("weight", dataset_info.mag1c.keys())
-        self.assertIn("mag1c", dataset_info.mag1c.keys())
-
-        # Labels
-        self.assertIn("label_rgba", dataset_info.labels.keys())
-        self.assertIn("label_binary", dataset_info.labels.keys())
-        self.assertIn("label_string", dataset_info.labels.keys())
+        self.assertEqual(path, r'data\STARCOP_ut\STARCOP_ut\ang20191018t141549_r6656_c0_w512_h512')
 
 
 if __name__ == '__main__':

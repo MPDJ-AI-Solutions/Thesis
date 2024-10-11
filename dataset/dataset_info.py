@@ -1,3 +1,7 @@
+import glob
+import os
+
+import cv2
 import torch
 import numpy as np
 
@@ -6,22 +10,34 @@ class SpectralImageInfo:
     """
     Class used to gather associated information about a data record.
     """
-    def __init__(self, images_AVIRIS, images_WV3, mag1c, labels):
-        self.images_AVIRIS = images_AVIRIS
-        self.images_WV3 = images_WV3
-        self.mag1c = mag1c
-        self.labels = labels
-
-    def to_tensor(self):
-        tensor_AVIRIS = torch.tensor(np.array(self.images_AVIRIS), dtype=torch.float32)
-        tensor_WV3 = torch.tensor(np.array(self.images_WV3), dtype=torch.float32)
-
-        tensor_mag1c = torch.tensor(np.array(list(self.mag1c.values())), dtype=torch.float32)
-        tensor_labels_rgba = torch.tensor(np.array(list(self.labels["label_rgba"])), dtype=torch.float32).permute(2, 0, 1)
-        tensor_labels_binary = torch.tensor(np.array(list(self.labels["label_binary"])), dtype=torch.float32).unsqueeze(0)
-
-        return torch.cat((tensor_AVIRIS, tensor_WV3, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary))
+    @staticmethod
+    def load_tensor(path: str):
+        pass
 
 
-def transformer_input_converter(tensor):
-    return tensor[:, :8, :, :], tensor[:, 16:20, :, :]
+class TransformerModelSpectralImageInfo(SpectralImageInfo):
+    @staticmethod
+    def load_tensor(path: str):
+        images_AVIRIS = [
+            cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
+        ]
+
+        mag1c = [
+            cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
+            cv2.imread(os.path.join(path, "weight_mag1c.tif"), cv2.IMREAD_UNCHANGED),
+        ]
+
+        label_rgba = cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED)
+        label_binary = cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED)
+
+        tensor_AVIRIS = torch.tensor(np.array(images_AVIRIS), dtype=torch.float32)
+        tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)
+        tensor_labels_rgba = torch.tensor(np.array(label_rgba), dtype=torch.float32).permute(2, 0, 1)
+        tensor_labels_binary = torch.tensor(np.array(label_binary), dtype=torch.float32).unsqueeze(0)
+
+        return torch.cat((tensor_AVIRIS, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary))
+
+    @staticmethod
+    def backbone_input_converter(tensor):
+        # Currently without mag1c
+        return tensor[:, :8, :, :]
