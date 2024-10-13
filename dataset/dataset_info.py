@@ -12,7 +12,7 @@ class SpectralImageInfo:
     """
     @staticmethod
     def load_tensor(path: str):
-        pass
+        raise NotImplementedError
 
 
 class TransformerModelSpectralImageInfo(SpectralImageInfo):
