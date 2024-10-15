@@ -8,7 +8,8 @@ from models.TransformerMethaneDetection.Transformer.encoder import Encoder
 class Transformer(nn.Module):
     def __init__(self, d_model, nhead, encoder_num_layers, num_decoder_layers, dim_feedforward=2048, dropout=0.1):
         super(Transformer, self).__init__()
-
+        self.d_model = d_model
+        self.nhead = nhead
         self.encoder = Encoder(
             d_model=d_model,
             nhead=nhead,

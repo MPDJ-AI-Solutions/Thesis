@@ -6,7 +6,7 @@ from models.TransformerMethaneDetection.Transformer.ffn import FFN
 
 
 class Decoder(nn.Module):
-    def __init__(self, num_layers, d_model, nhead, dim_feedforward, dropout, activation):
+    def __init__(self, num_layers, d_model, nhead, dim_feedforward, dropout, activation = nn.ReLU):
         super(Decoder, self).__init__()
         self.decoder_layers = [DecoderLayer(d_model, nhead, dim_feedforward, dropout, activation) for _ in range(num_layers)]
         self.norm_layer = nn.LayerNorm(d_model)

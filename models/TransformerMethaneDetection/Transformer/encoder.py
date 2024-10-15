@@ -1,6 +1,6 @@
 from torch import nn
 
-from ffn import FFN
+from .ffn import FFN
 
 
 class Encoder(nn.Module):

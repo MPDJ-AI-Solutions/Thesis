@@ -40,4 +40,4 @@ class TransformerModelSpectralImageInfo(SpectralImageInfo):
     @staticmethod
     def backbone_input_converter(tensor):
         # Currently without mag1c
-        return tensor[:, :8, :, :]
+        return tensor[:, :8, :, :], tensor[:, 14, :, :]
