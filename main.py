@@ -1,3 +1,6 @@
+import os
+
+import cv2
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -33,8 +36,8 @@ if __name__ == "__main__":
     train_dataset = STARCOPDataset(data_path=r"data", data_type=DatasetType.TRAIN, image_info_class=TransformerModelSpectralImageInfo)
     val_dataset = STARCOPDataset(data_path=r"data", data_type=DatasetType.TEST, image_info_class=TransformerModelSpectralImageInfo)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=4)
 
     # Define the loss function and optimizer
     criterion = nn.BCEWithLogitsLoss()  # or another loss function suitable for your task
@@ -48,8 +51,8 @@ if __name__ == "__main__":
 
         for batch in train_loader:
             images, masks = TransformerModelSpectralImageInfo.backbone_input_converter(batch)
+            bbox = TransformerModelSpectralImageInfo.get_bbox(batch)
 
-            # Transfer to cuda
             images = images.to(device)
             masks = masks.to(device)
 
@@ -59,13 +62,13 @@ if __name__ == "__main__":
             outputs = model(images, masks)
 
             # Compute loss
-            loss = criterion(outputs, masks)
-            loss.backward()
+            #loss = criterion(outputs, masks)
+            #loss.backward()
 
             # Update parameters
-            optimizer.step()
+            #optimizer.step()
 
-            running_loss += loss.item()
+            #running_loss += loss.item()
 
         return running_loss / len(data_loader)
 

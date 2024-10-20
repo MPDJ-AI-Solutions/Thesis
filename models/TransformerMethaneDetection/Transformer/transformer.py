@@ -27,7 +27,7 @@ class Transformer(nn.Module):
     def forward(self, x, mask, pos_embed, query_embed, mf_query):
         bs, c, h, w = x.shape
         x = x.flatten(2).permute(2, 0, 1)
-        positional_embeddings = pos_embed.flatten(2).permute(2, 0, 1)
+        positional_embeddings = pos_embed[1].permute(2, 0, 1)
         query_embeddings = query_embed.unsqueeze(1).repeat(1, bs, 1)
         mf_query = mf_query.permute(1, 0, 2)
         mask = mask.flatten(1)

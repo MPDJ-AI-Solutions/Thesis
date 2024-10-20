@@ -12,11 +12,16 @@ class Detector(nn.Module):
         super(Detector, self).__init__()
         self.backbone = backbone
         self.transformer = transformer
-        self.pos_encoder = PositionalEncoding(d_model=self.transformer.d_model)
+        self.pos_encoder = PositionalEncoding()
         self.query_embed = nn.Embedding(num_queries, d_model)
         self.mf_query = nn.Parameter(torch.rand(num_queries, d_model))
 
     def forward(self, x, mask):
+        """
+        Forward pass through the network. It takes batch of spectral images as input.
+
+        """
+
         features = self.backbone(x)
         pos_embed = self.pos_encoder(features)
 
