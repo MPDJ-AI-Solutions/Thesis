@@ -17,11 +17,11 @@ class QueryRefiner_tests(unittest.TestCase):
         qr_module = QueryRefiner(d_model=d_model, num_queries=num_queries)
 
         # Act
-        Q_ref = qr_module(fmc)
+        q_ref = qr_module(fmc)
 
         # Assert
-        assert_equal(Q_ref.shape, (100, 1, 256))
-        print("Refined Queries Shape:", Q_ref.shape)  # Expected: (num_queries, d_model)
+        assert_equal(q_ref.shape, (100, 1, 256))
+        print("Refined Queries Shape:", q_ref.shape)  # Expected: (num_queries, d_model)
 
 
 if __name__ == '__main__':

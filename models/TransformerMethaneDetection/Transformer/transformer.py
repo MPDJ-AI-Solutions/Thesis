@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from models.TransformerMethaneDetection.Transformer.decoder import Decoder
+from models.TransformerMethaneDetection.Transformer.hyperspectral_decoder import Decoder
 from models.TransformerMethaneDetection.Transformer.encoder import Encoder
 
 
