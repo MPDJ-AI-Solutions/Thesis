@@ -12,10 +12,10 @@ class SpectralLinearFilter(nn.Module):
 
     @staticmethod
     def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
-        pixels = image.permute(1, 2, 0).contiguous().view(-1, image.size(0))
+        pixels = image.contiguous().view(-1, image.size(2))
 
         kmeans = KMeans(n_clusters=num_classes, random_state=0)
-        segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[1], image.shape[2])
+        segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[0], image.shape[1])
 
         return torch.from_numpy(segmentation_mask)
 
