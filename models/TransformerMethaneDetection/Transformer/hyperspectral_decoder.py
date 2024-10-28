@@ -5,7 +5,7 @@ import torch.nn as nn
 class CrossAttention(nn.Module):
     def __init__(self, d_model=256, n_heads=8):
         super(CrossAttention, self).__init__()
-        self.multihead_attn = nn.MultiheadAttention(d_model, n_heads)
+        self.multihead_attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
         self.norm = nn.LayerNorm(d_model)
         self.ffn = nn.Sequential(
             nn.Linear(d_model, d_model * 4),

@@ -13,26 +13,23 @@ class QueryRefiner(nn.Module):
 
         # Self-attention and cross-attention layers
         # d = 256, heads = 8
-        self.self_attention = nn.MultiheadAttention(embed_dim=d_model, num_heads=num_heads)
-        self.cross_attention = nn.MultiheadAttention(embed_dim=d_model, num_heads=num_heads)
+        self.self_attention = nn.MultiheadAttention(embed_dim=d_model, num_heads=num_heads, batch_first=True)
+        self.cross_attention = nn.MultiheadAttention(embed_dim=d_model, num_heads=num_heads, batch_first=True)
 
         self.layer_norm = nn.LayerNorm(d_model)
 
     def forward(self, f_mc):
         # Self-attention on queries
-        q_self_att, _ = self.self_attention(self.queries.unsqueeze(1), self.queries.unsqueeze(1),
-                                            self.queries.unsqueeze(1))
+        batch_size, H, W, d_model = f_mc.shape
+        queries = self.queries.repeat(batch_size, 1, 1)
+
+        q_self_att, _ = self.self_attention(queries, queries, queries)
 
         # Layer Norm (queries + Self-Attention)
-        q_self_att_normalized = self.layer_norm(self.queries + q_self_att.squeeze(1))
+        q_self_att_normalized = self.layer_norm(self.queries + q_self_att)
 
-        # Reshape fmc (feature map) from (H, W, d) to (H*W, d) for compatibility
-        H, W, d = f_mc.shape
-        f_mc_flattened = f_mc.view(H * W, d)
-        f_mc_flattened = f_mc_flattened.unsqueeze(1)  # (H*W, 1, d) for attention
-
-        # Reshape q_self_att_normalized for cross attention
-        q_self_att_normalized = q_self_att_normalized.unsqueeze(1) # (num_queries, 1, d_model) for cross attention
+        # Reshape fmc (feature map) from (bs, H, W, d) to (bs, H*W, d) for compatibility
+        f_mc_flattened = f_mc.view(batch_size, H * W, d_model)
 
         # Cross-attention between queries and methane candidate feature map
         q_ref, _ = self.cross_attention(q_self_att_normalized, f_mc_flattened, f_mc_flattened)
