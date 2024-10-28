@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from torch.utils.data import DataLoader
 
@@ -12,7 +13,7 @@ class BackboneTests(unittest.TestCase):
     def test_backbone_load_data(self):
         # Arrange
         dataset = STARCOPDataset(
-            data_path=r"data", data_type=DatasetType.UNITTEST, image_info_class=TransformerModelSpectralImageInfo
+            data_path=os.path.join("unit_tests", "data"), data_type=DatasetType.UNITTEST, image_info_class=TransformerModelSpectralImageInfo
         )
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
         model = Backbone(8)
