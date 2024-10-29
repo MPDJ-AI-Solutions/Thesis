@@ -34,8 +34,7 @@ class Encoder(nn.Module):
             [SelfAttentionLayer(d_model, n_heads) for _ in range(num_layers)]
         )
 
-    def forward(self, x, pos_embedding):
-        x = x + pos_embedding
+    def forward(self, x):
         for layer in self.layers:
             x = layer(x)
 

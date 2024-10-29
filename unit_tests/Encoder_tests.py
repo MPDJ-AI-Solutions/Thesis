@@ -4,6 +4,7 @@ import torch
 from numpy.testing import assert_equal
 
 from models.TransformerMethaneDetection.Transformer.encoder import Encoder
+from models.TransformerMethaneDetection.Transformer.position_encoding import PositionalEncoding
 
 
 class EncoderTests(unittest.TestCase):
@@ -12,13 +13,15 @@ class EncoderTests(unittest.TestCase):
         H, W = 256, 256
         d_model = 256
         bs = 8
-        backbone_output = torch.rand(bs, int(H/32) * int(W/32), d_model)
-        embeddings = torch.rand(bs, int(H/32) * int(W/32), d_model)
+        backbone_output = torch.rand(bs, int(H/32), int(W/32), d_model)
+        pos_encoder = PositionalEncoding(d_model=d_model, height=int(H/32), width=int(W/32))
+
+        encoder_input = pos_encoder(backbone_output)
 
         model = Encoder(d_model=d_model, n_heads=8, num_layers=5)
 
         # Act
-        methane_concentration_map = model(backbone_output, embeddings)
+        methane_concentration_map = model(encoder_input)
 
 
         # Assert

@@ -33,10 +33,7 @@ class HyperspectralDecoder(nn.Module):
             CrossAttention(d_model, n_heads) for _ in range(num_layers)
         ])
 
-    def forward(self, encoder_output, pos_embeddings, queries):
-        # Add positional embeddings to encoder output
-        encoder_output = encoder_output + pos_embeddings
-
+    def forward(self, encoder_output, queries):
         # Pass through each decoder layer with cross-attention
         for layer in self.layers:
             queries = layer(queries, encoder_output, encoder_output)
