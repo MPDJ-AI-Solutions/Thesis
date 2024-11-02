@@ -1,37 +1,47 @@
-import torchvision.models
 import torch
 import torch.nn as nn
-
+from models.TransformerMethaneDetection.Backbone.custom_resnet import CustomResnet
 
 class Backbone(nn.Module):
     """
-    TODO: write docs
+    Class uses resnet-50 backbones to extract features from input RGB and SWIR images.
     """
-    def __init__(self, input_size: int = 8, pretrained: bool = True):
+    def __init__(self, rgb_channels: int = 3, swir_channels: int = 5, out_channels: int = 2048, d_model: int = 256):
         super(Backbone, self).__init__()
-        self.input_size = input_size
-        custom_resnet101 = torchvision.models.resnet101()
+        
+        # RGB
+        self.rgb_backbone  = CustomResnet(in_channels = rgb_channels, out_channels=out_channels)
+        # SWIR
+        self.swir_backbone = CustomResnet(in_channels = swir_channels, out_channels=out_channels)
 
-        # Change first layer for RGB + SWIR images input (input_size equals to considered wavelengths)
-        custom_resnet101.conv1 = nn.Conv2d(
-            input_size, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
-        )
+        self.combine_projection = nn.Conv2d(in_channels=2*out_channels, out_channels=out_channels, kernel_size=1)
 
-        if pretrained:
-            weights = torchvision.models.ResNet101_Weights.IMAGENET1K_V1
-            pretrained_weights = torchvision.models.resnet101(weights=weights).conv1.weight.data
-            new_weights = torch.zeros(64, self.input_size, 7, 7)
+        self.d_model_projection = nn.Conv2d(in_channels=out_channels, out_channels=d_model, kernel_size=1)
 
-            # Assign weights for RGB
-            new_weights[:, :3, :, :] = pretrained_weights
-            # Init weights for SWIR
-            new_weights[:, 3:, :, :] = pretrained_weights.mean(dim=1, keepdim=True)
 
-            # Save new weights
-            custom_resnet101.conv1.weight.data = new_weights
+    def forward(self, hsi: torch.Tensor) -> torch.Tensor:
+        # Input: Shape(bs, 3, h, w) Output: Shape(bs, 2048, h / 32, w / 32)
+        rgb_result = self.rgb_backbone(self._get_rgb(hsi=hsi))
 
-        # Remove last 2 layers - use only feature extraction
-        self.cnn_backbone = nn.Sequential(*list(custom_resnet101.children())[:-2])
+        # Input: Shape(bs, 5, h, w) Output: Shape(bs, 2048, h / 32, w / 32)
+        swir_result = self.swir_backbone(self._get_swir(hsi=hsi))
+ 
+        # (bs, 4096, h / 32, w / 32) =  (bs, 2048, h / 32, w / 32) + (bs, 2048, h / 32, w / 32)
+        combined_result = torch.cat((rgb_result, swir_result), 1)
 
-    def forward(self, x):
-        return self.cnn_backbone(x)
+        # Input: Shape(bs, 4096, h / 32, w / 32) Output: Shape(bs, 2048, h / 32, w / 32)
+        combined_projection = self.combine_projection(combined_result)
+        
+        # Input: Shape(bs, 2048, h / 32, w / 32) Output: Shape(bs, d_model, h / 32, w / 32)
+        d_model_projection = self.d_model_projection(combined_projection)
+        return d_model_projection
+
+
+    @staticmethod
+    def _get_rgb(hsi: torch.Tensor) -> torch.Tensor:
+        return hsi[:, :3, :, :]
+
+
+    @staticmethod
+    def _get_swir(hsi: torch.Tensor) -> torch.Tensor:
+        return hsi[:, 3:8, :, :]
