@@ -3,7 +3,7 @@ from torch.nn.functional import dropout
 
 
 class SelfAttentionLayer(nn.Module):
-    def __init__(self, d_model=256, n_head=8, dropout=0.1):
+    def __init__(self, d_model: int = 256, n_head: int = 8, dropout: int = 0.1):
         super(SelfAttentionLayer, self).__init__()
         self.multihead_attn = nn.MultiheadAttention(d_model, n_head, batch_first=True)
         self.attention_norm = nn.LayerNorm(d_model)
