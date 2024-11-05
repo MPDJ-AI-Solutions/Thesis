@@ -1,137 +1,150 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
 from typing import List, Optional
+from collections import defaultdict
 
 class SegmentationModel(nn.Module):
-    def __init__(self, detr, freeze_detr=False):
+    """
+    Segmentation model with Transformer-based mask prediction and a convolutional mask head.
+    """
+    def __init__(self, backbone_model, freeze_backbone=False):
         super().__init__()
-        self.detr = detr
+        self.backbone = backbone_model
 
-        if freeze_detr:
-            for p in self.parameters():
-                p.requires_grad_(False)
+        if freeze_backbone:
+            for param in self.backbone.parameters():
+                param.requires_grad = False
 
-        hidden_dim, nheads = detr.transformer.d_model, detr.transformer.nhead
-        self.bbox_attention = MHAttentionMap(hidden_dim, hidden_dim, nheads, dropout=0.0)
-        self.mask_head = MaskHeadSmallConv(hidden_dim + nheads, [1024, 512, 256], hidden_dim)
+        hidden_dim = backbone_model.transformer.hidden_dim
+        num_heads = backbone_model.transformer.num_heads
+        
+        # Attention layer to highlight bounding box areas
+        self.bbox_attention = AttentionMap(hidden_dim, hidden_dim, num_heads, dropout=0.0)
+        
+        # Mask prediction head with downsampling convolutional layers
+        self.mask_head = MaskPredictionHead(hidden_dim + num_heads, [1024, 512, 256], hidden_dim)
 
-        combiner_list = []
-        num_channels = detr.backbone.input_size # feature extractor
-        for in_channels in range(num_channels):
-            combiner_list.append(
-                nn.Sequential(
-                    nn.Conv2d(in_channels * 2, in_channels, kernel_size=1, stride=1, padding=0), nn.ReLU(inplace=True)
-                )
+        # Combining RGB and raw features from the backbone at multiple scales
+        self.feature_combiner = nn.ModuleList([
+            nn.Sequential(
+                nn.Conv2d(in_channels * 2, in_channels, kernel_size=1, stride=1),
+                nn.ReLU(inplace=True)
             )
-        self.combiner = nn.ModuleList(combiner_list)
+            for in_channels in backbone_model.feature_channels
+        ])
 
-    def forward(self, samples: Tensor, samples1: Tensor, samples2: Tensor):
-        # features extraction
-        features, pos, mf_out, rgb_feat, raw_feat = self.detr.backbone(
-            samples, samples1, samples2
+    def forward(self, rgb_input, raw_input):
+        rgb_features, raw_features, mask_features, positional_encoding = self.backbone(rgb_input, raw_input)
+
+        # Merge RGB and raw feature layers for pyramid structure
+        combined_features = []
+        for rgb_layer, raw_layer, comb_layer in zip(rgb_features, raw_features, self.feature_combiner):
+            combined_features.append(comb_layer(torch.cat([rgb_layer, raw_layer], dim=1)))
+
+        # Transformer-based object detection outputs
+        hidden_states, memory = self.backbone.transformer(mask_features)
+        class_logits = self.backbone.class_head(hidden_states)
+        box_predictions = self.backbone.bbox_head(hidden_states).sigmoid()
+
+        output = {
+            "class_logits": class_logits[-1],
+            "boxes": box_predictions[-1],
+        }
+
+        # Compute bounding box mask for segmentation
+        bbox_mask = self.bbox_attention(hidden_states[-1], memory)
+        segmentation_masks = self.mask_head(mask_features, bbox_mask, combined_features)
+        
+        # Format segmentation masks
+        output["masks"] = segmentation_masks.view(
+            mask_features.size(0), self.backbone.num_queries, segmentation_masks.size(-2), segmentation_masks.size(-1)
         )
-
-        bs = features[-1].shape[0]
-        src = features[-1]
-        mf_query = mf_out[-1]
-
-        src_proj = self.detr.input_proj(src)
-        hs, memory = self.detr.transformer(src_proj, None, self.detr.query_embed.weight, pos[-1], mf_query)
-
-        # Merge features to create the pyramid
-        comb_features = []
-        for idx, _layer in enumerate(rgb_feat.keys()):
-            _comb_feat = torch.cat((rgb_feat[_layer], raw_feat[_layer]), dim=1)
-            _comb_out = self.combiner[idx](_comb_feat)
-            comb_features.append(_comb_out)
-
-        outputs_class = self.detr.class_embed(hs)
-        outputs_coord = self.detr.bbox_embed(hs).sigmoid()
-        out = {"pred_logits": outputs_class[-1], "pred_boxes": outputs_coord[-1]}
-        if self.detr.aux_loss:
-            out["aux_outputs"] = self.detr._set_aux_loss(outputs_class, outputs_coord)
-
-        bbox_mask = self.bbox_attention(hs[-1], memory)
-        seg_masks = self.mask_head(src_proj, bbox_mask, [comb_features[2], comb_features[1], comb_features[0]])
-        outputs_seg_masks = seg_masks.view(bs, self.detr.num_queries, seg_masks.shape[-2], seg_masks.shape[-1])
-
-        out["pred_masks"] = outputs_seg_masks
-        return out
+        return output
 
 
-class MaskHeadSmallConv(nn.Module):
-    """Simplified convolutional head with group norm and FPN-based upsampling."""
-
-    def __init__(self, dim, fpn_dims, context_dim):
-        super().__init__()
-
-        inter_dims = [dim, context_dim // 2, context_dim // 4, context_dim // 8]
-        self.lay1 = nn.Conv2d(dim, dim, 3, padding=1)
-        self.gn1 = nn.GroupNorm(8, dim)
-        self.lay2 = nn.Conv2d(dim, inter_dims[1], 3, padding=1)
-        self.gn2 = nn.GroupNorm(8, inter_dims[1])
-        self.lay3 = nn.Conv2d(inter_dims[1], inter_dims[2], 3, padding=1)
-        self.gn3 = nn.GroupNorm(8, inter_dims[2])
-        self.lay4 = nn.Conv2d(inter_dims[2], inter_dims[3], 3, padding=1)
-        self.gn4 = nn.GroupNorm(8, inter_dims[3])
-        self.out_lay = nn.Conv2d(inter_dims[3], 1, 3, padding=1)
-
-        self.adapter1 = nn.Conv2d(fpn_dims[0], inter_dims[1], 1)
-        self.adapter2 = nn.Conv2d(fpn_dims[1], inter_dims[2], 1)
-        self.adapter3 = nn.Conv2d(fpn_dims[2], inter_dims[3], 1)
-
-    def forward(self, x: Tensor, bbox_mask: Tensor, fpns: List[Tensor]):
-        x = torch.cat([_expand(x, bbox_mask.shape[1]), bbox_mask.flatten(0, 1)], 1)
-
-        x = F.relu(self.gn1(self.lay1(x)))
-        x = F.relu(self.gn2(self.lay2(x)))
-
-        cur_fpn = self.adapter1(fpns[0])
-        x = cur_fpn + F.interpolate(x, size=cur_fpn.shape[-2:], mode="nearest")
-        x = F.relu(self.gn3(self.lay3(x)))
-
-        cur_fpn = self.adapter2(fpns[1])
-        x = cur_fpn + F.interpolate(x, size=cur_fpn.shape[-2:], mode="nearest")
-        x = F.relu(self.gn4(self.lay4(x)))
-
-        x = self.out_lay(x)
-        return x
-
-
-class MHAttentionMap(nn.Module):
-    """2D attention module, returns attention softmax (no multiplication)."""
-
-    def __init__(self, query_dim, hidden_dim, num_heads, dropout=0.0, bias=True):
+class AttentionMap(nn.Module):
+    """
+    Computes attention maps for bounding box refinement.
+    """
+    def __init__(self, input_dim, hidden_dim, num_heads, dropout=0.0):
         super().__init__()
         self.num_heads = num_heads
         self.hidden_dim = hidden_dim
         self.dropout = nn.Dropout(dropout)
+        self.query_transform = nn.Linear(input_dim, hidden_dim)
+        self.key_transform = nn.Conv2d(input_dim, hidden_dim, kernel_size=1)
 
-        self.q_linear = nn.Linear(query_dim, hidden_dim, bias=bias)
-        self.k_linear = nn.Linear(query_dim, hidden_dim, bias=bias)
+    def forward(self, query, key):
+        query = self.query_transform(query)
+        key = self.key_transform(key)
+        
+        query_heads = query.view(query.shape[0], query.shape[1], self.num_heads, self.hidden_dim // self.num_heads)
+        key_heads = key.view(key.shape[0], self.num_heads, self.hidden_dim // self.num_heads, key.shape[-2], key.shape[-1])
+        
+        attention_weights = torch.einsum("bqnc,bnchw->bqnhw", query_heads, key_heads) / (self.hidden_dim ** 0.5)
+        attention_weights = F.softmax(attention_weights.view(attention_weights.size(0), attention_weights.size(1), -1), dim=-1)
+        
+        return self.dropout(attention_weights.view_as(attention_weights))
 
-        self.normalize_fact = float(hidden_dim / self.num_heads) ** -0.5
 
-    def forward(self, q, k, mask: Optional[Tensor] = None):
-        q = self.q_linear(q)
-        k = F.conv2d(k, self.k_linear.weight.unsqueeze(-1).unsqueeze(-1), self.k_linear.bias)
-        qh = q.view(q.shape[0], q.shape[1], self.num_heads, self.hidden_dim // self.num_heads)
-        kh = k.view(k.shape[0], self.num_heads, self.hidden_dim // self.num_heads, k.shape[-2], k.shape[-1])
-        weights = torch.einsum("bqnc,bnchw->bqnhw", qh * self.normalize_fact, kh)
-
-        if mask is not None:
-            weights.masked_fill_(mask.unsqueeze(1).unsqueeze(1), float("-inf"))
-        return F.softmax(weights.flatten(2), dim=-1).view(weights.size())
-
-def _expand(tensor: Tensor, length: int) -> Tensor:
+class MaskPredictionHead(nn.Module):
     """
-    Expand the tensor along the batch dimension.
-    Args:
-        tensor (Tensor): The input tensor to be expanded.
-        length (int): The number of times to repeat the tensor along the batch dimension.
-    Returns:
-        Tensor: The expanded tensor.
+    Convolutional head for mask prediction, using feature pyramid networks (FPN) for upsampling.
     """
-    return tensor.unsqueeze(1).expand(-1, length, -1, -1, -1).flatten(0, 1)
+    def __init__(self, input_dim, pyramid_dims, context_dim):
+        super().__init__()
+        self.input_layers = nn.ModuleList([
+            nn.Sequential(
+                nn.Conv2d(input_dim, context_dim // (2 ** i), kernel_size=3, padding=1),
+                nn.GroupNorm(8, context_dim // (2 ** i)),
+                nn.ReLU(inplace=True)
+            ) for i in range(5)
+        ])
+        
+        self.output_layer = nn.Conv2d(context_dim // 16, 1, kernel_size=3, padding=1)
+        self.adapters = nn.ModuleList([
+            nn.Conv2d(pyramid_dim, context_dim // (2 ** i), kernel_size=1) 
+            for i, pyramid_dim in enumerate(pyramid_dims)
+        ])
+
+    def forward(self, input_tensor, bbox_mask, feature_pyramids):
+        x = torch.cat([input_tensor, bbox_mask], dim=1)
+
+        for layer, fpn, adapter in zip(self.input_layers, feature_pyramids, self.adapters):
+            x = layer(x)
+            upsampled_fpn = adapter(fpn)
+            x += F.interpolate(upsampled_fpn, size=x.shape[-2:], mode="nearest")
+
+        return self.output_layer(x)
+
+
+class DiceLoss(nn.Module):
+    """
+    Compute Dice loss for binary masks.
+    """
+    def forward(self, predictions, targets, num_samples):
+        predictions = predictions.sigmoid().flatten(1)
+        intersection = 2 * (predictions * targets).sum(dim=1)
+        union = predictions.sum(dim=1) + targets.sum(dim=1)
+        return (1 - (intersection + 1) / (union + 1)).sum() / num_samples
+
+
+class FocalLoss(nn.Module):
+    """
+    Compute Focal loss for segmentation masks, balancing easy vs. hard examples.
+    """
+    def __init__(self, alpha=0.25, gamma=2):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, predictions, targets, num_samples):
+        prob = predictions.sigmoid()
+        ce_loss = F.binary_cross_entropy_with_logits(predictions, targets, reduction="none")
+        p_t = prob * targets + (1 - prob) * (1 - targets)
+        loss = ce_loss * ((1 - p_t) ** self.gamma)
+        if self.alpha >= 0:
+            alpha_factor = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+            loss *= alpha_factor
+        return loss.mean() / num_samples

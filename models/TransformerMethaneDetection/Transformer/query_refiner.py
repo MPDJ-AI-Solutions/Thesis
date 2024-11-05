@@ -4,6 +4,9 @@ import torch.nn.functional as F
 
 
 class QueryRefiner(nn.Module):
+    """
+    TODO: COMMENT
+    """
     def __init__(self, d_model = 256, num_queries=100, num_heads=8):
         super(QueryRefiner, self).__init__()
 
@@ -18,7 +21,7 @@ class QueryRefiner(nn.Module):
 
         self.layer_norm = nn.LayerNorm(d_model)
 
-    def forward(self, f_mc):
+    def forward(self, f_mc: torch.Tensor) -> torch.Tensor:
         # Self-attention on queries
         batch_size, H, W, d_model = f_mc.shape
         queries = self.queries.repeat(batch_size, 1, 1)

@@ -18,6 +18,7 @@ class CustomResnet(nn.Module):
         self.cnn = nn.Sequential(*list(self.resnet.children())[:-2])
         self.project_layer = nn.Conv2d(in_channels=2048, out_channels=out_channels, kernel_size=1)
 
+
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         features = self.cnn(image)
         return self.project_layer(features)

@@ -5,10 +5,14 @@ from torch import nn
 
 
 class SpectralLinearFilter(nn.Module):
+    """
+    TODO: COMMENT
+    """
     def __init__(self, num_classes: int = 20, min_class_size: int = 10000):
         super(SpectralLinearFilter, self).__init__()
         self.num_classes = num_classes
         self.min_class_size = min_class_size
+
 
     @staticmethod
     def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
@@ -19,6 +23,7 @@ class SpectralLinearFilter(nn.Module):
 
         return torch.from_numpy(segmentation_mask)
 
+
     @staticmethod
     def compute_covariance(pixels: torch.Tensor, mean_vector) -> torch.Tensor:
         num_pixels = len(pixels)
@@ -27,6 +32,7 @@ class SpectralLinearFilter(nn.Module):
 
         return covariance
 
+
     @staticmethod
     def spectral_linear_filter(pixel_spectrum, mean_vector, inv_covariance_matrix, methane_pattern) -> torch.Tensor:
         centered_spectrum = pixel_spectrum - mean_vector
@@ -34,6 +40,7 @@ class SpectralLinearFilter(nn.Module):
         denominator = torch.sqrt(methane_pattern.T @ inv_covariance_matrix @ methane_pattern)
 
         return numerator / denominator
+
 
     def forward(self, hyperspectral_image, methane_pattern) -> torch.Tensor:
         batch_size, num_channels, height, width = hyperspectral_image.shape
