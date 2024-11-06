@@ -1,4 +1,3 @@
-import numpy
 import torch
 from sklearn.cluster import KMeans
 from torch import nn

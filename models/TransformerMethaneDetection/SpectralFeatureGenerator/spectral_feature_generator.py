@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torchvision.models as models
 
 from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_linear_filter import SpectralLinearFilter
 from models.TransformerMethaneDetection.SpectralFeatureGenerator.feature_extractor import FeatureExtractor
@@ -13,6 +12,7 @@ class SpectralFeatureGenerator(nn.Module):
         super(SpectralFeatureGenerator, self).__init__()
         self.SLF = SpectralLinearFilter(min_class_size=min_class_size, num_classes=num_classes)
         self.feature_extractor = FeatureExtractor(d_model=d_model)
+
 
     def forward(self, hyperspectral_image: torch.Tensor) -> torch.Tensor:
         methane_pattern = [0, 0, 0, 0.1, 0.3, 0.6, 0.8, 0.7]
