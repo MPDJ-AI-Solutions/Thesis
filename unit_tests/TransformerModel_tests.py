@@ -1,11 +1,10 @@
 import unittest
-
-from models.TransformerMethaneDetection.Segmentation.segmentation import BoxAndMaskPredictor
+from models.TransformerMethaneDetection.model import Model
 
 class STARCOPDatasetTests(unittest.TestCase):
     def test_TransformerModel(self):
         # Arrange
-        BaM_predictor = BoxAndMaskPredictor()
+        model = Model()
         
         # Act
 
