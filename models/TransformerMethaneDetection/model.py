@@ -26,7 +26,6 @@ class Model(nn.Module):
                  n_encoder_layers: int = 6,
                  n_decoder_layers: int = 6,
                  n_queries: int = 100,
-                 embedding_dim: int = 512,
                  threshold: float = 0.5,
             ):
 
@@ -49,7 +48,7 @@ class Model(nn.Module):
             num_heads=attention_heads,
             fpn_channels=backbone_out_channels,
             threshold=threshold,
-            embedding_dim=embedding_dim
+            embedding_dim=d_model
         )
 
         
