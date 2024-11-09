@@ -46,9 +46,11 @@ class Model(nn.Module):
         
         self.segmentation = BoxAndMaskPredictor(
             num_heads=attention_heads,
-            fpn_channels=backbone_out_channels,
+            fpn_channels=n_queries,
             threshold=threshold,
-            embedding_dim=d_model
+            embedding_dim=d_model,
+            result_width=image_width,
+            result_height=image_height,
         )
 
         
@@ -68,7 +70,6 @@ class Model(nn.Module):
         e_out = self.decoder(
             self.positional_encoding(f_e.view(batch_size, int(height / 32), int(width/32), self.d_model)), q_ref
         )
-
 
 
         return self.segmentation(e_out, f_e)
