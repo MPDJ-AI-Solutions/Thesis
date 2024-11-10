@@ -9,39 +9,18 @@ class PositionalEncoding(nn.Module):
     """
     def __init__(self, d_model: int, height: int, width: int):
         super(PositionalEncoding, self).__init__()
-        pe = self._calculate_matrix_loop(height, width, d_model)
+        pe = self._calculate_matrix_tensors(height, width, d_model)
 
         # Register positional encoding as a buffer (no gradient computation needed)
         self.register_buffer('pe', pe)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (batch_size, d_model, height, width)
-        batch_size, height, width, d_model = x.size()
+        batch_size, height, width, d_model  = x.size()
 
         # Expand positional encoding to match batch size and add to input
         pe_expanded = self.pe.unsqueeze(0).expand(batch_size, -1, -1, -1)
-        return (x + pe_expanded).view(batch_size, width * height, d_model)
-
-    @staticmethod
-    def _calculate_matrix_loop(height: int, width: int, d_model: int) -> torch.Tensor:
-        pe = torch.zeros(height, width, d_model)
-        for h in range(height):
-            for w in range(width):
-                for ch in range(d_model):
-                    if h % 2 == 0:
-                        pe[h, w, ch] = math.sin(h / 10000 ** (2 * ch / d_model))
-                    else:
-                        pe[h, w, ch] = math.cos(h / 10000 ** (2 * ch / d_model))
-
-        for h in range(height):
-            for w in range(width):
-                for ch in range(d_model):
-                    if w % 2 == 0:
-                        pe[h, w, ch] += math.sin(w / 10000 ** (2 * ch / d_model))
-                    else:
-                        pe[h, w, ch] += math.cos(w / 10000 ** (2 * ch / d_model))
-
-        return pe
+        return (x + pe_expanded).reshape(batch_size, width * height, d_model)
 
 
     @staticmethod

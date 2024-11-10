@@ -1,6 +1,7 @@
 import torch
 from sklearn.cluster import KMeans
 from torch import nn
+from torch.cuda import device
 
 
 class SpectralLinearFilter(nn.Module):
@@ -15,7 +16,7 @@ class SpectralLinearFilter(nn.Module):
 
     @staticmethod
     def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
-        pixels = image.contiguous().view(-1, image.size(2))
+        pixels = image.to("cpu").contiguous().view(-1, image.size(2))
 
         kmeans = KMeans(n_clusters=num_classes, random_state=0)
         segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[0], image.shape[1])
@@ -43,8 +44,9 @@ class SpectralLinearFilter(nn.Module):
 
     def forward(self, hyperspectral_image, methane_pattern) -> torch.Tensor:
         batch_size, num_channels, height, width = hyperspectral_image.shape
-
-        result = torch.zeros((batch_size, height, width), dtype=torch.float32)
+        hyperspectral_image = hyperspectral_image.to("cpu").contiguous()
+        methane_pattern = torch.FloatTensor(methane_pattern)
+        result = torch.zeros((batch_size, height, width), dtype=torch.float32).to('cpu')
         for batch in range(batch_size):
             image = hyperspectral_image[batch].permute(1, 2, 0)
             segmentation_mask = self.compute_segmentation(image=image, num_classes=self.num_classes)
@@ -71,4 +73,4 @@ class SpectralLinearFilter(nn.Module):
 
             result[batch] = methane_concentration_map
 
-        return result
+        return result.to("cuda")

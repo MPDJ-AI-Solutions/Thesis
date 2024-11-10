@@ -1,16 +1,16 @@
 import torch
 import torch.nn as nn
 
-from SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
-from Backbone.backbone import Backbone
-from Transformer.encoder import Encoder
-from Transformer.hyperspectral_decoder import HyperspectralDecoder
-from Transformer.position_encoding import PositionalEncoding
-from Transformer.query_refiner import QueryRefiner
-from Segmentation.segmentation import BoxAndMaskPredictor
+from .SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
+from .Backbone.backbone import Backbone
+from .Transformer.encoder import Encoder
+from .Transformer.hyperspectral_decoder import HyperspectralDecoder
+from .Transformer.position_encoding import PositionalEncoding
+from .Transformer.query_refiner import QueryRefiner
+from .Segmentation.segmentation import BoxAndMaskPredictor
 
 
-class Model(nn.Module):
+class TransformerModel(nn.Module):
     """
     TODO docs, verification, tests
     """
@@ -29,7 +29,7 @@ class Model(nn.Module):
                  threshold: float = 0.5,
             ):
 
-        super(Model, self).__init__()
+        super(TransformerModel, self).__init__()
 
         self.d_model = d_model
 
@@ -38,7 +38,9 @@ class Model(nn.Module):
             num_classes=sfg_num_classes, min_class_size=sfg_min_class_size, d_model=d_model
         )
         
-        self.positional_encoding = PositionalEncoding(d_model=d_model, height=image_height, width=image_width)
+        self.positional_encoding = PositionalEncoding(
+            d_model=d_model, height=int(image_height / 32), width=int(image_width / 32)
+        )
         self.encoder = Encoder(d_model=d_model, n_heads=attention_heads, num_layers=n_encoder_layers)
         
         self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
@@ -63,9 +65,10 @@ class Model(nn.Module):
 
         f_comb_proj = self.backbone(image)
         f_mc = self.spectral_feature_generator(image)
+        f_mc = f_mc.permute(0, 2, 3, 1)
 
         q_ref = self.query_refiner(f_mc)
-        f_e = self.encoder(self.positional_encoding(f_comb_proj))
+        f_e = self.encoder(self.positional_encoding(f_comb_proj.permute(0, 2, 3, 1)))
 
         e_out = self.decoder(
             self.positional_encoding(f_e.view(batch_size, int(height / 32), int(width/32), self.d_model)), q_ref

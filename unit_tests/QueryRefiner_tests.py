@@ -9,10 +9,10 @@ from models.TransformerMethaneDetection.Transformer.query_refiner import QueryRe
 class QueryRefinerTests(unittest.TestCase):
     def test_QR(self):
         # Arrange
-        d_model = 256
+        d_model = 2048
         num_queries = 100
-        H, W = 256, 256  # Dimensions of fmc (height and width of feature map)
-        bs = 16
+        H, W = 16, 16  # Dimensions of fmc (height and width of feature map)
+        bs = 2
 
         fmc = torch.randn(bs, H, W, d_model)  # Example feature map
         qr_module = QueryRefiner(d_model=d_model, num_queries=num_queries)
@@ -21,7 +21,7 @@ class QueryRefinerTests(unittest.TestCase):
         q_ref = qr_module(fmc)
 
         # Assert
-        assert_equal(q_ref.shape, (16, 100, 256))
+        assert_equal(q_ref.shape, (2, 100, 2048))
         print("Refined Queries Shape:", q_ref.shape)  # Expected: (batch_size, num_queries, d_model)
 
 

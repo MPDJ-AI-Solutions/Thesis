@@ -9,8 +9,8 @@ class SpectralFeatureGeneratorTests(unittest.TestCase):
     def test_SFG(self):
         # Arrange
         # bs, c, h, w
-        d_model = 256
-        bs, ch, h, w = 16, 1, 256, 256
+        d_model = 2048
+        bs, ch, h, w = 16, 8, 512, 512
         
         input_image = torch.rand(bs, ch, h, w)
         sfg = SpectralFeatureGenerator(d_model=d_model)
