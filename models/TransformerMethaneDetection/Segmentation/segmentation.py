@@ -82,7 +82,6 @@ class BoxAndMaskPredictor(nn.Module):
         for layer in self.fpn_layers:
             mask_heatmaps = layer(mask_heatmaps)
 
-        # Apply threshold to obtain binary mask
-        binary_mask = (mask_heatmaps > self.threshold).float()
+        mask_heatmaps = torch.sigmoid(mask_heatmaps)
 
-        return bbox_predictions, confidence_scores, binary_mask
+        return bbox_predictions, confidence_scores, mask_heatmaps
