@@ -18,8 +18,6 @@ class TransformerModel(nn.Module):
     def __init__(self,
                  d_model: int = 256,
                  backbone_out_channels: int = 2048,
-                 sfg_min_class_size: int = 10000,
-                 sfg_num_classes: int = 20,
                  image_height: int = 512,
                  image_width: int = 512,
                  attention_heads: int = 8,
@@ -34,9 +32,7 @@ class TransformerModel(nn.Module):
         self.d_model = d_model
 
         self.backbone = Backbone(d_model=d_model, rgb_channels=3, swir_channels=5, out_channels=backbone_out_channels)
-        self.spectral_feature_generator = SpectralFeatureGenerator(
-            num_classes=sfg_num_classes, min_class_size=sfg_min_class_size, d_model=d_model
-        )
+        self.spectral_feature_generator = SpectralFeatureGenerator(d_model=d_model)
         
         self.positional_encoding = PositionalEncoding(
             d_model=d_model, height=int(image_height / 32), width=int(image_width / 32)
@@ -56,7 +52,7 @@ class TransformerModel(nn.Module):
         )
 
         
-    def forward(self, image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         TODO docs, tests
         """
@@ -64,7 +60,7 @@ class TransformerModel(nn.Module):
         batch_size, channels, height, width = image.shape
 
         f_comb_proj = self.backbone(image)
-        f_mc = self.spectral_feature_generator(image)
+        f_mc = self.spectral_feature_generator(filtered_image)
         f_mc = f_mc.permute(0, 2, 3, 1)
 
         q_ref = self.query_refiner(f_mc)

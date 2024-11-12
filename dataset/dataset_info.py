@@ -45,6 +45,7 @@ class TransformerModelSpectralImageInfo(SpectralImageInfo):
     def get_bbox(tensor):
         return tensor[:, 15:18, :, :].permute(0, 2, 3, 1)
 
+
 def add_bbox(image):
     bbox_image = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
     contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -54,4 +55,39 @@ def add_bbox(image):
 
     return bbox_image
 
+
+class FilteredSpectralImageInfo(SpectralImageInfo):
+    @staticmethod
+    def load_tensor(path: str):
+        """
+        Loads tensor....
+
+        - path: str
+
+        """
+        images_AVIRIS = [
+            cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
+        ]
+
+
+        # TODO Try catch block if file don't exists
+        filtered_image = np.load(os.path.join(path, "slf_result.npy"))
+
+        mag1c = [
+            cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
+            cv2.imread(os.path.join(path, "weight_mag1c.tif"), cv2.IMREAD_UNCHANGED),
+        ]
+
+        label_rgba = cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED)
+        label_binary = cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED)
+
+        tensor_AVIRIS = torch.tensor(np.array(images_AVIRIS), dtype=torch.float32)
+        tensor_filtered_image = torch.tensor(np.array(filtered_image), dtype=torch.float32).unsqueeze(0)
+        tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)
+        tensor_labels_rgba = torch.tensor(np.array(label_rgba), dtype=torch.float32).permute(2, 0, 1)
+        tensor_labels_binary = torch.tensor(np.array(label_binary), dtype=torch.float32).unsqueeze(0)
+        #tensor_bboxes = torch.tensor(add_bbox(label_binary), dtype=torch.float32).permute(2, 0, 1)
+        tensor_bboxes = torch.rand(100, 4)
+
+        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary, tensor_bboxes
 
