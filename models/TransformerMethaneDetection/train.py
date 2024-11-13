@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader, Dataset
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import FilteredSpectralImageInfo
 from dataset.dataset_type import DatasetType
+from measures.measure_tool_factory import ModelMeasurer
+from measures.model_type import ModelType
 
 from .model import TransformerModel
 
@@ -15,7 +17,7 @@ def train(
         criterion,
         optimizer: torch.optim.Optimizer,
         device: str = "cuda"
-):
+    ):
     model.train()  # Set model to training mode
     running_loss = 0.0
 
@@ -50,10 +52,13 @@ def train(
     return running_loss / len(dataloader)  # Return average loss for the epoch
 
 
-def evaluate(model, dataloader, criterion, device="cuda"):
+def evaluate(model, dataloader, criterion, measurer, device="cuda"):
     model.eval()  # Set model to evaluation mode
 
-    running_loss = 0.0
+    all_predictions: list = []
+    all_targets: list = []
+    running_loss: float = 0.0
+
     with torch.no_grad():
         for batch_idx, (image, filtered_image, mag1c, labels_rgba, labels_binary, bboxes) in enumerate(
                 dataloader):
@@ -74,7 +79,12 @@ def evaluate(model, dataloader, criterion, device="cuda"):
             # Log running loss
             running_loss += total_loss.item()
 
-    return running_loss / len(dataloader)  # Return average loss for the epoch
+            all_predictions.append(mask.cpu())
+            all_targets.append(target_mask.cpu())
+
+    measures = measurer.get_measures(torch.cat(all_predictions), torch.cat(all_targets))
+
+    return running_loss / len(dataloader), measures  # Return average loss for the epoch
 
 
 # Initialize dataset and dataloader
@@ -101,6 +111,8 @@ if __name__ == "__main__":
     criterion = torch.nn.BCELoss()  # Example loss function (you can define custom losses)
     optimizer = optim.Adam(transformer_model.parameters(), lr=1e-5)
 
+    measurer = ModelMeasurer(model_type=ModelType.TRANSFORMER)
+
     # Training loop
     epochs = 10  # Set the number of epochs
     for epoch in range(epochs):
@@ -114,5 +126,7 @@ if __name__ == "__main__":
         print(f"Training Loss: {train_loss:.4f}")
 
         # Evaluate on the validation set (if you have one)
-        val_loss = evaluate(transformer_model, test_dataloader, criterion, device="cuda")
+        val_loss, measures = evaluate(transformer_model, test_dataloader, criterion, measurer=measurer, device="cuda")
+
         print(f"Validation Loss: {val_loss:.4f}")
+        print(measures)
