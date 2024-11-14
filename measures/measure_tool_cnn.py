@@ -49,6 +49,22 @@ class MeasureToolCNN(MeasureTool):
 
 
     @staticmethod
+    def npv(result: torch.Tensor, target: torch.Tensor) -> float:
+        tn = MeasureToolCNN.tn(result, target)
+        fn = MeasureToolCNN.fn(result, target)
+        denominator = tn + fn
+        return tn / denominator if denominator != 0 else 0
+
+
+    @staticmethod
+    def fpr(result: torch.Tensor, target: torch.Tensor) -> float:
+        fp = MeasureToolCNN.fp(result, target)
+        tn = MeasureToolCNN.tn(result, target)
+        denominator = fp + tn
+        return fp / denominator if denominator != 0 else 0
+
+
+    @staticmethod
     def accuracy(result: torch.Tensor, target: torch.Tensor) -> float:
         correct = (result == target).float().sum()
         total = target.numel()
@@ -69,22 +85,6 @@ class MeasureToolCNN(MeasureTool):
         intersection = ((result == 1) & (target == 1)).float().sum()
         union = ((result == 1) | (target == 1)).float().sum()
         return intersection / union if union != 0 else 0
-
-
-    @staticmethod
-    def npv(result: torch.Tensor, target: torch.Tensor) -> float:
-        tn = MeasureToolCNN.tn(result, target)
-        fn = MeasureToolCNN.fn(result, target)
-        denominator = tn + fn
-        return tn / denominator if denominator != 0 else 0
-
-
-    @staticmethod
-    def fpr(result: torch.Tensor, target: torch.Tensor) -> float:
-        fp = MeasureToolCNN.fp(result, target)
-        tn = MeasureToolCNN.tn(result, target)
-        denominator = fp + tn
-        return fp / denominator if denominator != 0 else 0
 
 
     @staticmethod
