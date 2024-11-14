@@ -1,6 +1,6 @@
 import math
 
-from measure_tool import MeasureTool
+from .measure_tool import MeasureTool
 
 import torch
 

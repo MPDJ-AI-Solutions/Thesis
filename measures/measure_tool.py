@@ -97,7 +97,7 @@ class MeasureTool:
         pass
 
 
-    def compute_measures(self, result, target):
+    def compute_measures(self, result: torch.Tensor, target: torch.Tensor) -> pd.DataFrame:
         return pd.DataFrame({
             "TP"          : self.tp(result, target),
             "FP"          : self.fp(result, target),

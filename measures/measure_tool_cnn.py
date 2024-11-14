@@ -28,56 +28,63 @@ class MeasureToolCNN(MeasureTool):
     def precision(result: torch.Tensor, target: torch.Tensor) -> float:
         tp = MeasureToolCNN.tp(result, target)
         fp = MeasureToolCNN.fp(result, target)
-        return tp / (tp + fp + 1e-6)
+        denominator = tp + fp
+        return tp / denominator if denominator != 0 else 0
 
 
     @staticmethod
     def sensitivity(result: torch.Tensor, target: torch.Tensor) -> float:
         tp = MeasureToolCNN.tp(result, target)
         fn = MeasureToolCNN.fn(result, target)
-        return tp / (tp + fn + 1e-6)
+        denominator = tp + fn
+        return tp / denominator if denominator != 0 else 0
 
 
     @staticmethod
     def specificity(result: torch.Tensor, target: torch.Tensor) -> float:
         tn = MeasureToolCNN.tn(result, target)
         fp = MeasureToolCNN.fp(result, target)
-        return tn / (tn + fp + 1e-6)
+        denominator = tn + fp
+        return tn / denominator if denominator != 0 else 0
 
 
     @staticmethod
     def accuracy(result: torch.Tensor, target: torch.Tensor) -> float:
         correct = (result == target).float().sum()
         total = target.numel()
-        return correct / total
+        return correct / total if total != 0 else 0
 
 
     @staticmethod
     def fscore(result: torch.Tensor, target: torch.Tensor) -> float:
         precision = MeasureToolCNN.precision(result, target)
         recall = MeasureToolCNN.sensitivity(result, target)
-        return 2 * (precision * recall) / (precision + recall + 1e-6)
+        numerator = 2 * (precision * recall)
+        denominator = precision + recall
+        return numerator / denominator if denominator != 0 else 0
 
 
     @staticmethod
     def iou(result: torch.Tensor, target: torch.Tensor) -> float:
         intersection = ((result == 1) & (target == 1)).float().sum()
         union = ((result == 1) | (target == 1)).float().sum()
-        return intersection / (union + 1e-6)
+        return intersection / union if union != 0 else 0
 
 
     @staticmethod
     def npv(result: torch.Tensor, target: torch.Tensor) -> float:
         tn = MeasureToolCNN.tn(result, target)
         fn = MeasureToolCNN.fn(result, target)
-        return tn / (tn + fn + 1e-6)
+        denominator = tn + fn
+        return tn / denominator if denominator != 0 else 0
 
 
     @staticmethod
     def fpr(result: torch.Tensor, target: torch.Tensor) -> float:
         fp = MeasureToolCNN.fp(result, target)
         tn = MeasureToolCNN.tn(result, target)
-        return fp / (fp + tn + 1e-6)
+        denominator = fp + tn
+        return fp / denominator if denominator != 0 else 0
 
 
     @staticmethod
@@ -87,8 +94,8 @@ class MeasureToolCNN(MeasureTool):
         fn = MeasureToolCNN.fn(result, target)
         tn = MeasureToolCNN.tn(result, target)
         numerator = (tp * tn - fp * fn)
-        denominator = math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) + 1e-6)
-        return numerator / denominator
+        denominator = math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        return numerator / denominator if denominator != 0 else 0
 
 
     @staticmethod
