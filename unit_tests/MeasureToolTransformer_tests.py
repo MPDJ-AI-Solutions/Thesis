@@ -3,8 +3,8 @@ import torch
 
 from sklearn.metrics import matthews_corrcoef
 
-from measures.model_type import ModelType
-from measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.measures.model_type import ModelType
+from models.Tools.measures.measure_tool_factory import MeasureToolFactory
 
 
 class MeasureToolTransformerTests(unittest.TestCase):

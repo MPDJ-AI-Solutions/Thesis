@@ -1,12 +1,15 @@
+from datetime import datetime
+
 import torch
 from torch import optim
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import FilteredSpectralImageInfo
 from dataset.dataset_type import DatasetType
-from measures.measure_tool_factory import ModelMeasurer
-from measures.model_type import ModelType
+from models.Tools.measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.measures.model_type import ModelType
+from models.Tools.model_files_handler import ModelFilesHandler
 
 from .model import TransformerModel
 
@@ -82,7 +85,7 @@ def evaluate(model, dataloader, criterion, measurer, device="cuda"):
             all_predictions.append(mask.cpu())
             all_targets.append(target_mask.cpu())
 
-    measures = measurer.get_measures(torch.cat(all_predictions), torch.cat(all_targets))
+    measures = measurer.compute_measures(torch.cat(all_predictions), torch.cat(all_targets))
 
     return running_loss / len(dataloader), measures  # Return average loss for the epoch
 
@@ -111,7 +114,7 @@ if __name__ == "__main__":
     criterion = torch.nn.BCELoss()  # Example loss function (you can define custom losses)
     optimizer = optim.Adam(transformer_model.parameters(), lr=1e-5)
 
-    measurer = ModelMeasurer(model_type=ModelType.TRANSFORMER)
+    measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
 
     # Training loop
     epochs = 10  # Set the number of epochs
@@ -130,3 +133,11 @@ if __name__ == "__main__":
 
         print(f"Validation Loss: {val_loss:.4f}")
         print(measures)
+
+        model_handler = ModelFilesHandler()
+        model_handler.save_model(
+            model=transformer_model,
+            epoch=epoch,
+            metrics=measures,
+            model_type=ModelType.TRANSFORMER
+        )
