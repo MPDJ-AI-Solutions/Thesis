@@ -32,7 +32,7 @@ class TransformerModelSpectralImageInfo(SpectralImageInfo):
         tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)
         tensor_labels_rgba = torch.tensor(np.array(label_rgba), dtype=torch.float32).permute(2, 0, 1)
         tensor_labels_binary = torch.tensor(np.array(label_binary), dtype=torch.float32).unsqueeze(0)
-        tensor_bboxes = torch.tensor(add_bbox(label_binary), dtype=torch.float32).permute(2, 0, 1)
+        tensor_bboxes = torch.tensor(TransformerModelSpectralImageInfo.add_bbox(label_binary), dtype=torch.float32).permute(2, 0, 1)
 
         return torch.cat((tensor_AVIRIS, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary, tensor_bboxes), dim=0)
 
@@ -45,15 +45,15 @@ class TransformerModelSpectralImageInfo(SpectralImageInfo):
     def get_bbox(tensor):
         return tensor[:, 15:18, :, :].permute(0, 2, 3, 1)
 
+    @staticmethod
+    def add_bbox(image):
+        bbox_image = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(bbox_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-def add_bbox(image):
-    bbox_image = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
-    contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(bbox_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    return bbox_image
+        return bbox_image
 
 
 class FilteredSpectralImageInfo(SpectralImageInfo):
@@ -86,8 +86,26 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
         tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)
         tensor_labels_rgba = torch.tensor(np.array(label_rgba), dtype=torch.float32).permute(2, 0, 1)
         tensor_labels_binary = torch.tensor(np.array(label_binary), dtype=torch.float32).unsqueeze(0)
-        #tensor_bboxes = torch.tensor(add_bbox(label_binary), dtype=torch.float32).permute(2, 0, 1)
-        tensor_bboxes = torch.rand(100, 4)
+        tensor_bboxes, tensor_bboxes_confidence = FilteredSpectralImageInfo.add_bbox(label_binary, 512, 512)
 
-        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary, tensor_bboxes
+        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary, tensor_bboxes, tensor_bboxes_confidence
 
+    @staticmethod
+    def add_bbox(image, height, width):
+        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        result_bbox = torch.zeros((16, 4))
+        result_confidence = torch.zeros((16, 1))
+        i = 0
+        for contour in contours[:16]:
+            x, y, w, h = cv2.boundingRect(contour)
+
+            x_scaled = x
+            y_scaled = y
+            w_scaled = w
+            h_scaled = h
+
+            result_bbox[i, :] = torch.tensor([x_scaled, y_scaled, w_scaled, h_scaled], dtype=torch.float32)
+            result_confidence[i] = torch.tensor([1], dtype=torch.float32)
+            i += 1
+
+        return result_bbox, result_confidence

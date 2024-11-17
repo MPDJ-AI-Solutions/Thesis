@@ -27,7 +27,7 @@ class ModelFilesHandler:
     def _create_description_file(self):
         # Define the columns for the description file
         columns = [
-            'model_type', 'date', 'file_name', 'epoch'
+            'model_type', 'date', 'file_name', 'epoch',
             'tp', 'fp', 'fn', 'tn', 'precision', 'sensitivity',
             'specificity', 'npv', 'fpr', 'accuracy', 'fscore',
             'iou', 'mcc', 'auc', 'ci',

@@ -25,51 +25,89 @@ class BoxAndMaskPredictor(nn.Module):
 
         # FFNs for box prediction
         self.bbox_head = nn.Sequential(
+            nn.LayerNorm(embedding_dim),
             nn.Linear(embedding_dim, embedding_dim),
             nn.ReLU(),
+            nn.Dropout(0.1),
             nn.Linear(embedding_dim, 4)  # Output: bounding box coordinates (x, y, w, h)
         )
 
         # FFN for confidence score prediction
         self.confidence_head = nn.Sequential(
+            nn.LayerNorm(embedding_dim),
             nn.Linear(embedding_dim, embedding_dim),
             nn.ReLU(),
+            nn.Dropout(0.1),
             nn.Linear(embedding_dim, 1)  # Output: confidence score
         )
 
         # Attention mechanism for mask prediction
+        self.pre_attention_norm = nn.LayerNorm(embedding_dim)
         self.mask_attention = nn.MultiheadAttention(embedding_dim, num_heads=num_heads, batch_first=True)
 
 
-        self.mask_projection = nn.Linear(embedding_dim, int((result_height / 32) * (result_width / 32)))
+        self.mask_projection =nn.Sequential(
+            nn.LayerNorm(embedding_dim),
+            nn.Linear(embedding_dim, embedding_dim),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(embedding_dim, int((result_height / 32) * (result_width / 32)))
+        )
 
         # Feature Pyramid Network-like layers for upsampling
         self.fpn_layers = nn.ModuleList([
             nn.Sequential(
                 nn.ConvTranspose2d(fpn_channels, fpn_channels // 2, kernel_size=2, stride=2),
-                nn.ReLU()
+                nn.BatchNorm2d(fpn_channels // 2),
+                nn.ReLU(),
+                nn.Dropout2d(0.1)
             ),
             nn.Sequential(
                 nn.ConvTranspose2d(fpn_channels // 2, fpn_channels // 4, kernel_size=2, stride=2),
-                nn.ReLU()
+                nn.BatchNorm2d(fpn_channels // 4),
+                nn.ReLU(),
+                nn.Dropout2d(0.1)
             ),
             nn.Sequential(
                 nn.ConvTranspose2d(fpn_channels // 4, fpn_channels // 8, kernel_size=2, stride=2),
-                nn.ReLU()
+                nn.BatchNorm2d(fpn_channels // 8),
+                nn.ReLU(),
+                nn.Dropout2d(0.1)
             ),
             nn.Sequential(
                 nn.ConvTranspose2d(fpn_channels // 8, fpn_channels // 16, kernel_size=2, stride=2),
-                nn.ReLU()
+                nn.BatchNorm2d(fpn_channels // 16),
+                nn.ReLU(),
+                nn.Dropout2d(0.1)
             ),
-            nn.ConvTranspose2d(fpn_channels // 16, 1, kernel_size=2, stride=2)  # Final output: 1 channel
+            nn.Sequential(
+                nn.ConvTranspose2d(fpn_channels // 16, 1, kernel_size=2, stride=2),
+                nn.BatchNorm2d(1)
+            )
         ])
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize the weights using Xavier initialization"""
+        for m in self.modules():
+            if isinstance(m, (nn.Linear, nn.ConvTranspose2d)):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
 
     def forward(self, e_out: torch.Tensor, fe: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         bbox_predictions = self.bbox_head(e_out)
+        bbox_predictions = bbox_predictions * 0.1  # Scale gradients
+        bbox_predictions[:, :2] = torch.sigmoid(bbox_predictions[:, :2]) * 512# Clamp x, y to [0, 1]
+        bbox_predictions[:, 2:] = torch.relu(bbox_predictions[:, 2:]) * 512 # Clamp w, h to [0, ∞]
+
         confidence_scores = torch.sigmoid(self.confidence_head(e_out))
 
         # Compute mask attention scores
-        mask_attention_scores, _ = self.mask_attention(e_out, fe, fe)
+        normed_e_out = self.pre_attention_norm(e_out)
+        normed_fe = self.pre_attention_norm(fe)
+        mask_attention_scores, _ = self.mask_attention(normed_e_out, normed_fe, normed_fe)
 
         # Project to spatial feature map
         # (batch_size, num_queries, (result_height / 32) * (result_width / 32))
@@ -79,9 +117,15 @@ class BoxAndMaskPredictor(nn.Module):
         mask_heatmaps = mask_heatmaps.view(-1, self.fpn_channels, int(self.result_height / 32), int(self.result_width / 32))
 
         # Upsample through FPN
-        for layer in self.fpn_layers:
+        previous_features = None
+        for i, layer in enumerate(self.fpn_layers):
             mask_heatmaps = layer(mask_heatmaps)
+            if previous_features is not None and i < len(self.fpn_layers) - 1:
+                # Add residual connection if shapes match
+                if previous_features.shape == mask_heatmaps.shape:
+                    mask_heatmaps = mask_heatmaps + previous_features
+            previous_features = mask_heatmaps
 
-        mask_heatmaps = torch.sigmoid(mask_heatmaps)
+        mask_heatmaps = torch.sigmoid(mask_heatmaps / 0.1)  # Temperature scaling
 
         return bbox_predictions, confidence_scores, mask_heatmaps

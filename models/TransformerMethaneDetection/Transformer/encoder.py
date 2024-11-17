@@ -17,15 +17,18 @@ class SelfAttentionLayer(nn.Module):
         )
 
         self.ffn_norm = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        attn, _ = self.multihead_attn(x, x, x)
-        x = self.attention_norm(x + self.dropout(attn))
-
-        ffn_out = self.ffn(x)
-        x = self.ffn_norm(x + self.dropout(ffn_out))
-
+        src = x
+        x, _ = self.multihead_attn(x, x, x)
+        x = self.dropout1(x)
+        x = self.attention_norm(x + src)
+        src = x
+        x = self.ffn(x)
+        x = self.dropout2(x)
+        x = self.ffn_norm(x + src)
         return x
 
 
