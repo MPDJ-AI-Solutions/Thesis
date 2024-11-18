@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+from .Segmentation.bbox_prediction import BBoxPrediction
 from .SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
 from .Backbone.backbone import Backbone
 from .Transformer.encoder import Encoder
@@ -42,21 +43,22 @@ class TransformerModel(nn.Module):
         self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
         self.decoder = HyperspectralDecoder(d_model=d_model, n_heads=attention_heads, num_layers=n_decoder_layers)
         
-        self.segmentation = BoxAndMaskPredictor(
-            num_heads=attention_heads,
-            fpn_channels=n_queries,
-            threshold=threshold,
-            embedding_dim=d_model,
-            result_width=image_width,
-            result_height=image_height,
-        )
+        # self.segmentation = BoxAndMaskPredictor(
+        #     num_heads=attention_heads,
+        #     fpn_channels=n_queries,
+        #     threshold=threshold,
+        #     embedding_dim=d_model,
+        #     result_width=image_width,
+        #     result_height=image_height,
+        # )
 
+        self.bbox = BBoxPrediction(d_model=d_model)
         
     def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         TODO docs, tests
         """
-        # ?
+        # get image size
         batch_size, channels, height, width = image.shape
 
         f_comb_proj = self.backbone(image)
@@ -70,5 +72,6 @@ class TransformerModel(nn.Module):
             self.positional_encoding(f_e.view(batch_size, int(height / 32), int(width/32), self.d_model)), q_ref
         )
 
+        result = self.bbox(e_out)
 
-        return self.segmentation(e_out, f_e)
+        return result
