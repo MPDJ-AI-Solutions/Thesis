@@ -3,8 +3,8 @@ import torch
 
 from sklearn.metrics import matthews_corrcoef
 
-from models.Tools.measures.model_type import ModelType
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
 
 
 class MeasureToolTransformerTests(unittest.TestCase):
@@ -194,10 +194,10 @@ class MeasureToolTransformerTests(unittest.TestCase):
         # Assert
         self.assertAlmostEqual(first=actual, second=desired, places=4)
 
-    #TODO
+
     def test_auc(self):
         # Arrange
-        desired = 0
+        desired = 0.727554
 
         # Act
         actual = self.mt_transformer.auc(target=self.target, result=self.result)

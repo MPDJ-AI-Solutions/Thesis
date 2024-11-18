@@ -8,8 +8,8 @@ from torch.utils.data import DataLoader
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import FilteredSpectralImageInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.measures.model_type import ModelType
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
 from models.Tools.model_files_handler import ModelFilesHandler
 from models.TransformerMethaneDetection.HungarianMatcher import HungarianMatcher
 

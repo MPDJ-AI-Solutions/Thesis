@@ -69,9 +69,11 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
             cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
         ]
 
-
-        # TODO Try catch block if file don't exists
-        filtered_image = np.load(os.path.join(path, "slf_result.npy"))
+        filtered_image_path = os.path.join(path, "slf_result.npy")
+        if os.path.isfile(filtered_image_path):
+            filtered_image = np.load(filtered_image_path)
+        else:
+            raise NotImplementedError # TODO Filter image on runtime
 
         mag1c = [
             cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
