@@ -1,8 +1,7 @@
 import unittest
-
 import torch
-from numpy.ma.testutils import assert_equal
 
+from numpy.ma.testutils import assert_equal
 from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
 
 class SpectralFeatureGeneratorTests(unittest.TestCase):
@@ -10,7 +9,7 @@ class SpectralFeatureGeneratorTests(unittest.TestCase):
         # Arrange
         # bs, c, h, w
         d_model = 2048
-        bs, ch, h, w = 16, 8, 512, 512
+        bs, ch, h, w = 16, 1, 512, 512
         
         input_image = torch.rand(bs, ch, h, w)
         sfg = SpectralFeatureGenerator(d_model=d_model)

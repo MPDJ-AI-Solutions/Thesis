@@ -1,8 +1,8 @@
 import unittest
 import torch
 
-from models.Tools.measures.model_type import ModelType
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
 
 
 class MeasureToolCNNTests(unittest.TestCase):
@@ -155,16 +155,17 @@ class MeasureToolCNNTests(unittest.TestCase):
         # Assert
         self.assertAlmostEqual(first=actual, second=desired, places=4)
 
-    # TO DO
+
     def test_auc(self):
         # Arrange
-        desired = 0
+        desired = 0.7333
 
         # Act
         actual = self.mt_cnn.auc(target=self.target, result=self.result)
 
         # Assert
-        self.assertAlmostEqual(first=0, second=desired, places=4)
+        self.assertAlmostEqual(first=actual, second=desired, places=4)
+
 
     # TO DO
     def test_ci(self):
@@ -173,6 +174,7 @@ class MeasureToolCNNTests(unittest.TestCase):
 
         # Act
         actual = self.mt_cnn.ci(target=self.target, result=self.result)
+        print(actual)
 
         # Assert
         self.assertAlmostEqual(first=0, second=desired, places=4)

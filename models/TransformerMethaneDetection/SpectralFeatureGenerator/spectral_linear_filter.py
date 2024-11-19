@@ -1,4 +1,5 @@
 import torch
+import torch.multiprocessing as mp
 from sklearn.cluster import KMeans
 from torch import nn
 
@@ -17,10 +18,8 @@ class SpectralLinearFilter(nn.Module):
     @staticmethod
     def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
         pixels = image.to("cpu").contiguous().view(-1, image.size(2))
-
         kmeans = KMeans(n_clusters=num_classes, random_state=0)
         segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[0], image.shape[1])
-
         return torch.from_numpy(segmentation_mask)
 
 
@@ -39,7 +38,6 @@ class SpectralLinearFilter(nn.Module):
         centered_spectrum = pixel_spectrum - mean_vector
         numerator = (centered_spectrum.T @ inv_covariance_matrix @ methane_pattern)
         denominator = torch.sqrt(methane_pattern.T @ inv_covariance_matrix @ methane_pattern)
-
         return numerator / denominator
 
 
@@ -77,39 +75,13 @@ class SpectralLinearFilter(nn.Module):
         return result
 
 
-import torch.multiprocessing as mp
 
-class SpectralLinearFilterParallel(nn.Module):
+class SpectralLinearFilterParallel(SpectralLinearFilter):
     """
     Parallelized version of the SpectralLinearFilter class
     """
     def __init__(self, num_classes: int = 20, min_class_size: int = 10000):
-        super(SpectralLinearFilterParallel, self).__init__()
-        self.num_classes = num_classes
-        self.min_class_size = min_class_size
-
-    @staticmethod
-    def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
-        pixels = image.to("cpu").contiguous().view(-1, image.size(2))
-        kmeans = KMeans(n_clusters=num_classes, random_state=0)
-        segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[0], image.shape[1])
-        return torch.from_numpy(segmentation_mask)
-
-    @staticmethod
-    def compute_covariance(pixels: torch.Tensor, mean_vector) -> torch.Tensor:
-        num_pixels = len(pixels)
-        centered_pixels = pixels - mean_vector
-        covariance = (centered_pixels.T @ centered_pixels) / num_pixels
-        regularization_term = torch.eye(covariance.size(0)) * 1e-6  # Small value on diagonal
-        covariance += regularization_term  # Add to make matrix invertible
-        return covariance
-
-    @staticmethod
-    def spectral_linear_filter(pixel_spectrum, mean_vector, inv_covariance_matrix, methane_pattern) -> torch.Tensor:
-        centered_spectrum = pixel_spectrum - mean_vector
-        numerator = (centered_spectrum.T @ inv_covariance_matrix @ methane_pattern)
-        denominator = torch.sqrt(methane_pattern.T @ inv_covariance_matrix @ methane_pattern)
-        return numerator / denominator
+        super(SpectralLinearFilterParallel, self).__init__(num_classes, min_class_size)
 
     @staticmethod
     def process_image(batch, hyperspectral_image, methane_pattern, num_classes, min_class_size, height, width):

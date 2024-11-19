@@ -6,7 +6,7 @@ from numpy.ma.testutils import assert_equal
 from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_linear_filter import SpectralLinearFilter, SpectralLinearFilterParallel
 
 
-class STARCOPDatasetTests(unittest.TestCase):
+class SpectralLinearFilterTests(unittest.TestCase):
     def test_SLF(self):
         # Arrange
         # bs, c, w, h

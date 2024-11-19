@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pandas as pd
 
 
-from models.Tools.measures.model_type import ModelType
+from models.Tools.Measures.model_type import ModelType
 from models.Tools.model_files_handler import ModelFilesHandler
 from models.TransformerMethaneDetection.model import TransformerModel
 

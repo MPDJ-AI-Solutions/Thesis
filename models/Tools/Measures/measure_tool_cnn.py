@@ -1,5 +1,7 @@
 from .measure_tool import MeasureTool
 
+from sklearn.metrics import auc, roc_curve, roc_auc_score
+import numpy as np
 import torch
 import math
 
@@ -100,45 +102,30 @@ class MeasureToolCNN(MeasureTool):
 
     @staticmethod
     def auc(result: torch.Tensor, target: torch.Tensor) -> float:
-        pass #placeholder
+        return roc_auc_score(target.flatten(), result.flatten())
 
-    # @staticmethod
-    # def auc(result: torch.Tensor, target: torch.Tensor) -> float:
-    #     predictions = result.cpu().detach()
-    #     targets = target.cpu().detach()
-    #
-    #     # Compute False Positive Rate (fpr) and True Positive Rate (tpr)
-    #     fpr, tpr, _ = roc(predictions, targets, pos_label=1)
-    #
-    #     # Compute AUC
-    #     auc_score = auc(fpr, tpr)
-    #     return auc_score.item()
-
-
+    # TODO
     @staticmethod
-    def ci(result: torch.Tensor, target: torch.Tensor) -> float:
-        pass  # placeholder
-    # @staticmethod
-    # def ci(result: torch.Tensor, target: torch.Tensor) -> float:
-    #     predictions = result.cpu().detach().numpy()
-    #     targets = target.cpu().detach().numpy()
-    #     num_bootstrap: int = 1000
-    #     confidence: float = 0.95
-    #     auc_scores = []
-    #     n = len(predictions)
-    #
-    #     for _ in range(num_bootstrap):
-    #         # Sample with replacement
-    #         indices = np.random.choice(range(n), n, replace=True)
-    #         sample_predictions = predictions[indices]
-    #         sample_targets = targets[indices]
-    #
-    #         # Calculate AUC for the bootstrap sample
-    #         auc_score = calculate_auc(torch.tensor(sample_predictions), torch.tensor(sample_targets))
-    #         auc_scores.append(auc_score)
-    #
-    #     # Calculate confidence interval
-    #     lower_bound = np.percentile(auc_scores, (1 - confidence) / 2 * 100)
-    #     upper_bound = np.percentile(auc_scores, (1 + confidence) / 2 * 100)
-    #
-    #     return lower_bound, upper_bound
+    def ci(result: torch.Tensor, target: torch.Tensor) ->(float, float):
+        predictions = result.cpu().detach().numpy()
+        targets = target.cpu().detach().numpy()
+        num_bootstrap: int = 1000
+        confidence: float = 0.95
+        auc_scores = []
+        n = len(predictions)
+
+        for _ in range(num_bootstrap):
+            # Sample with replacement
+            indices = np.random.choice(range(n), n, replace=True)
+            sample_predictions = predictions[indices]
+            sample_targets = targets[indices]
+
+            # Calculate AUC for the bootstrap sample
+            auc_score = MeasureToolCNN.auc(torch.tensor(sample_predictions), torch.tensor(sample_targets))
+            auc_scores.append(auc_score)
+
+        # Calculate confidence interval
+        lower_bound = np.percentile(auc_scores, (1 - confidence) / 2 * 100)
+        upper_bound = np.percentile(auc_scores, (1 + confidence) / 2 * 100)
+
+        return lower_bound, upper_bound
