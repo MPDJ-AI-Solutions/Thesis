@@ -36,13 +36,14 @@ class TransformerModel(nn.Module):
         self.spectral_feature_generator = SpectralFeatureGenerator(d_model=d_model)
         
         self.positional_encoding = PositionalEncoding(
-            d_model=d_model, height=int(image_height / 32), width=int(image_width / 32)
+            d_model=d_model
         )
         self.encoder = Encoder(d_model=d_model, n_heads=attention_heads, num_layers=n_encoder_layers)
         
         self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
         self.decoder = HyperspectralDecoder(d_model=d_model, n_heads=attention_heads, num_layers=n_decoder_layers)
-        
+        self.bbox = BBoxPrediction(d_model=d_model)
+
         # self.segmentation = BoxAndMaskPredictor(
         #     num_heads=attention_heads,
         #     fpn_channels=n_queries,
@@ -52,8 +53,7 @@ class TransformerModel(nn.Module):
         #     result_height=image_height,
         # )
 
-        self.bbox = BBoxPrediction(d_model=d_model)
-        
+
     def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         TODO docs, tests
@@ -61,15 +61,19 @@ class TransformerModel(nn.Module):
         # get image size
         batch_size, channels, height, width = image.shape
 
-        f_comb_proj = self.backbone(image)
+        f_comb_proj, f_comb = self.backbone(image)
+
+        positional_encoding = self.positional_encoding(f_comb).expand(batch_size, -1, -1, -1)
+
+        f_comb_proj_add_positional_encoding = positional_encoding + f_comb_proj
         f_mc = self.spectral_feature_generator(filtered_image)
         f_mc = f_mc.permute(0, 2, 3, 1)
 
         q_ref = self.query_refiner(f_mc)
-        f_e = self.encoder(self.positional_encoding(f_comb_proj.permute(0, 2, 3, 1)))
+        f_e = self.encoder((f_comb_proj + positional_encoding).flatten(2).permute(0, 2, 1))
 
         e_out = self.decoder(
-            self.positional_encoding(f_e.view(batch_size, int(height / 32), int(width/32), self.d_model)), q_ref
+            (f_e.permute(0, 2, 1).view(batch_size, -1, int(height / 32), int(width / 32)) + positional_encoding).flatten(2).permute(0, 2, 1), q_ref
         )
 
         result = self.bbox(e_out)

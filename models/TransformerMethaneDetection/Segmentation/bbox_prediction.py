@@ -12,7 +12,6 @@ class BBoxPrediction(nn.Module):
             nn.LayerNorm(d_model),
             nn.Linear(d_model, d_model),
             nn.ReLU(),
-            nn.Dropout(0.1),
             nn.Linear(d_model, d_model),
             nn.ReLU(),
             nn.Linear(d_model, d_model),
@@ -21,7 +20,10 @@ class BBoxPrediction(nn.Module):
             nn.Sigmoid()
         )
 
-        self.class_head = nn.Linear(d_model, 2)
+        self.class_head = nn.Sequential(
+            nn.Linear(d_model, 2),
+            nn.Sigmoid()
+        )
 
 
     def forward(self, e_out: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:

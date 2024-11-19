@@ -24,6 +24,7 @@ class STARCOPDataset(Dataset):
         self.images_path = os.path.join(data_path, data_type.get_folder_name(), data_type.get_folder_name())
         self.image_info = image_info_class
         self.csv = pd.read_csv(os.path.join(data_path, data_type.value + ".csv"))
+        self.csv = self.csv[self.csv['has_plume'] == True].reset_index(drop=True)
         self.enable_augmentation = enable_augmentation
 
     def __len__(self):

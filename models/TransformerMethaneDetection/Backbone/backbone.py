@@ -1,3 +1,5 @@
+from typing import Tuple, Any
+
 import torch
 import torch.nn as nn
 from models.TransformerMethaneDetection.Backbone.custom_resnet import CustomResnet
@@ -6,7 +8,7 @@ class Backbone(nn.Module):
     """
     Class uses resnet-50 backbones to extract features from input RGB and SWIR images.
     """
-    def __init__(self, rgb_channels: int = 3, swir_channels: int = 5, out_channels: int = 2048, d_model: int = 256):
+    def __init__(self, rgb_channels: int = 3, swir_channels: int = 5, out_channels: int = 1024, d_model: int = 256):
         super(Backbone, self).__init__()
         
         # RGB
@@ -19,22 +21,22 @@ class Backbone(nn.Module):
         self.d_model_projection = nn.Conv2d(in_channels=out_channels, out_channels=d_model, kernel_size=1)
 
 
-    def forward(self, hsi: torch.Tensor) -> torch.Tensor:
-        # Input: Shape(bs, 3, h, w) Output: Shape(bs, 2048, h / 32, w / 32)
+    def forward(self, hsi: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        # Input: Shape(bs, 3, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         rgb_result = self.rgb_backbone(self._get_rgb(hsi=hsi))
 
-        # Input: Shape(bs, 5, h, w) Output: Shape(bs, 2048, h / 32, w / 32)
+        # Input: Shape(bs, 5, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         swir_result = self.swir_backbone(self._get_swir(hsi=hsi))
  
-        # (bs, 4096, h / 32, w / 32) =  (bs, 2048, h / 32, w / 32) + (bs, 2048, h / 32, w / 32)
+        # (bs, 2 * out_channels, h / 32, w / 32) =  (bs, out_channels, h / 32, w / 32) + (bs, out_channels, h / 32, w / 32)
         combined_result = torch.cat((rgb_result, swir_result), 1)
 
-        # Input: Shape(bs, 4096, h / 32, w / 32) Output: Shape(bs, 2048, h / 32, w / 32)
+        # Input: Shape(bs, 2 * out_channels, h / 32, w / 32) Output: Shape(bs, out_channels, h / 32, w / 32)
         combined_projection = self.combine_projection(combined_result)
         
-        # Input: Shape(bs, 2048, h / 32, w / 32) Output: Shape(bs, d_model, h / 32, w / 32)
+        # Input: Shape(bs, out_channels, h / 32, w / 32) Output: Shape(bs, d_model, h / 32, w / 32)
         d_model_projection = self.d_model_projection(combined_projection)
-        return d_model_projection
+        return  d_model_projection, combined_projection,
 
 
     @staticmethod

@@ -73,10 +73,8 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
         # TODO Try catch block if file don't exists
         filtered_image = np.load(os.path.join(path, "slf_result.npy"))
 
-        mag1c = [
-            cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
-            cv2.imread(os.path.join(path, "weight_mag1c.tif"), cv2.IMREAD_UNCHANGED),
-        ]
+        mag1c = cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
+
 
         label_rgba = cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED)
         label_binary = cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED)
@@ -94,18 +92,22 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
     def add_bbox(image, height, width):
         contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         result_bbox = torch.zeros((16, 4))
-        result_confidence = torch.zeros((16, 1))
+        result_confidence = torch.zeros((16, 2))
         i = 0
         for contour in contours[:16]:
             x, y, w, h = cv2.boundingRect(contour)
 
-            x_scaled = x
-            y_scaled = y
-            w_scaled = w
-            h_scaled = h
+            x_scaled = x / 512
+            y_scaled = y / 512
+            w_scaled = w / 512
+            h_scaled = h / 512
 
             result_bbox[i, :] = torch.tensor([x_scaled, y_scaled, w_scaled, h_scaled], dtype=torch.float32)
-            result_confidence[i] = torch.tensor([1], dtype=torch.float32)
+            result_confidence[i] = torch.tensor([0, 1], dtype=torch.float32)
             i += 1
+
+        for j in range(16 - i):
+            result_confidence[i + j] = torch.tensor([1, 0], dtype=torch.float32)
+
 
         return result_bbox, result_confidence
