@@ -17,12 +17,10 @@ class BBoxPrediction(nn.Module):
             nn.Linear(d_model, d_model),
             nn.ReLU(),
             nn.Linear(d_model, 4),  # Output: bounding box coordinates (x, y, w, h)
-            nn.Sigmoid()
         )
 
         self.class_head = nn.Sequential(
             nn.Linear(d_model, 2),
-            nn.Sigmoid()
         )
 
 
@@ -30,4 +28,4 @@ class BBoxPrediction(nn.Module):
         out_class = self.class_head(e_out)
         bboxes = self.bbox_head(e_out)
 
-        return bboxes.squeeze(0), out_class.squeeze(0)
+        return bboxes.squeeze(0).sigmoid(), out_class.squeeze(0)
