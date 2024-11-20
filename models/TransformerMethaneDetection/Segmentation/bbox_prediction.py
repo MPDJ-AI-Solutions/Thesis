@@ -30,4 +30,4 @@ class BBoxPrediction(nn.Module):
         out_class = self.class_head(e_out)
         bboxes = self.bbox_head(e_out)
 
-        return bboxes, out_class
+        return bboxes.squeeze(0), out_class.squeeze(0)
