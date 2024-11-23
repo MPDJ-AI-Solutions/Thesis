@@ -18,9 +18,14 @@ class FeatureExtractor(nn.Module):
         for name, param in self.resnet.named_parameters():
             if name not in ["conv1.weight", "conv1.bias"]:
                 param.requires_grad = False
+            else:
+                param.requires_grad = True
                 
         # Project output to d_model channels
-        self.project = nn.Conv2d(in_channels=2048, out_channels=d_model, kernel_size=1)
+        self.project = nn.Sequential(
+            nn.Conv2d(in_channels=2048, out_channels=d_model, kernel_size=1),
+            nn.ReLU(inplace=True)
+        )
         self.cnn_backbone = nn.Sequential(*list(self.resnet.children())[:-2])
 
 

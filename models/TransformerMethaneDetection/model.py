@@ -63,16 +63,16 @@ class TransformerModel(nn.Module):
         # )
 
 
-    def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, image: torch.Tensor, filtered_image: torch.Tensor, mag1c: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         TODO docs, tests
         """
         # get image size
         batch_size, channels, height, width = image.shape
 
-        f_comb_proj, f_comb = self.backbone(image)
+        f_comb_proj, f_comb = self.backbone(image, mag1c)
 
-        positional_encoding = self.positional_encoding(f_comb).expand(batch_size, -1, -1, -1)
+        positional_encoding = self.positional_encoding(f_comb)[0]
 
         f_comb_proj_add_positional_encoding = positional_encoding + f_comb_proj
         f_mc = self.spectral_feature_generator(filtered_image)

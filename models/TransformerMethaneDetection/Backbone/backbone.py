@@ -15,21 +15,23 @@ class Backbone(nn.Module):
         self.rgb_backbone  = CustomResnet(in_channels = rgb_channels, out_channels=out_channels)
         # SWIR
         self.swir_backbone = CustomResnet(in_channels = swir_channels, out_channels=out_channels)
+        self.mag1c_backbone = CustomResnet(in_channels = 1, out_channels=out_channels)
 
-        self.combine_projection = nn.Conv2d(in_channels=2*out_channels, out_channels=out_channels, kernel_size=1)
+        self.combine_projection = nn.Conv2d(in_channels=3*out_channels, out_channels=out_channels, kernel_size=1)
 
         self.d_model_projection = nn.Conv2d(in_channels=out_channels, out_channels=d_model, kernel_size=1)
 
 
-    def forward(self, hsi: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, hsi: torch.Tensor, mag1c: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         # Input: Shape(bs, 3, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         rgb_result = self.rgb_backbone(self._get_rgb(hsi=hsi))
 
         # Input: Shape(bs, 5, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         swir_result = self.swir_backbone(self._get_swir(hsi=hsi))
- 
+        mag1c_result = self.mag1c_backbone(mag1c)
+
         # (bs, 2 * out_channels, h / 32, w / 32) =  (bs, out_channels, h / 32, w / 32) + (bs, out_channels, h / 32, w / 32)
-        combined_result = torch.cat((rgb_result, swir_result), 1)
+        combined_result = torch.cat((rgb_result, swir_result, mag1c_result), 1)
 
         # Input: Shape(bs, 2 * out_channels, h / 32, w / 32) Output: Shape(bs, out_channels, h / 32, w / 32)
         combined_projection = self.combine_projection(combined_result)

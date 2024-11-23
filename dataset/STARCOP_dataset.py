@@ -49,7 +49,7 @@ class STARCOPDataset(Dataset):
             return image, filtered_image, result_image[2], result_image[3], mask, result_image[5]
 
     def _normal_get_item(self, index):
-        file_index = index / 16
+        file_index = index // 16
         images_directory_path = os.path.join(self.images_path, self.csv["id"][file_index])
 
         return self.image_info.load_tensor(images_directory_path, grid_id=index % 16)
