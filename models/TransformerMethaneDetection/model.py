@@ -6,6 +6,7 @@ from .SpectralFeatureGenerator.spectral_feature_generator import SpectralFeature
 from .Backbone.backbone import Backbone
 from .Transformer.encoder import Encoder
 from .Transformer.hyperspectral_decoder import HyperspectralDecoder
+from .Transformer.methane_mapper_transformer import Transformer
 from .Transformer.position_encoding import PositionalEncoding
 from .Transformer.query_refiner import QueryRefiner
 from .Segmentation.segmentation import BoxAndMaskPredictor
@@ -38,10 +39,18 @@ class TransformerModel(nn.Module):
         self.positional_encoding = PositionalEncoding(
             d_model=d_model
         )
-        self.encoder = Encoder(d_model=d_model, n_heads=attention_heads, num_layers=n_encoder_layers)
+
+        self.query_embed = nn.Embedding(n_queries, d_model)
+
+        #self.encoder = Encoder(d_model=d_model, n_heads=attention_heads, num_layers=n_encoder_layers)
         
-        self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
-        self.decoder = HyperspectralDecoder(d_model=d_model, n_heads=attention_heads, num_layers=n_decoder_layers)
+        #self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
+        #self.decoder = HyperspectralDecoder(d_model=d_model, n_heads=attention_heads, num_layers=n_decoder_layers)
+
+        #TODO copy methane mapper transformer and
+        self.transformer = Transformer()
+
+
         self.bbox = BBoxPrediction(d_model=d_model)
 
         # self.segmentation = BoxAndMaskPredictor(
@@ -54,26 +63,33 @@ class TransformerModel(nn.Module):
         # )
 
 
-    def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, image: torch.Tensor, filtered_image: torch.Tensor, mag1c: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         TODO docs, tests
         """
         # get image size
         batch_size, channels, height, width = image.shape
 
-        f_comb_proj, f_comb = self.backbone(image)
+        f_comb_proj, f_comb = self.backbone(image, mag1c)
 
-        positional_encoding = self.positional_encoding(f_comb).expand(batch_size, -1, -1, -1)
+        positional_encoding = self.positional_encoding(f_comb)[0]
 
         f_comb_proj_add_positional_encoding = positional_encoding + f_comb_proj
         f_mc = self.spectral_feature_generator(filtered_image)
         f_mc = f_mc.permute(0, 2, 3, 1)
 
-        q_ref = self.query_refiner(f_mc)
-        f_e = self.encoder((f_comb_proj + positional_encoding).flatten(2).permute(0, 2, 1))
+        # q_ref = self.query_refiner(f_mc)
+        # f_e = self.encoder((f_comb_proj + positional_encoding).flatten(2).permute(0, 2, 1))
+        #
+        # e_out = self.decoder(
+        #     (f_e.permute(0, 2, 1).view(batch_size, -1, int(height / 32), int(width / 32)) + positional_encoding).flatten(2).permute(0, 2, 1), q_ref
+        # )
 
-        e_out = self.decoder(
-            (f_e.permute(0, 2, 1).view(batch_size, -1, int(height / 32), int(width / 32)) + positional_encoding).flatten(2).permute(0, 2, 1), q_ref
+        e_out, _  = self.transformer(
+            src=f_comb_proj,
+            query_embed=self.query_embed.weight,
+            pos_embed=positional_encoding,
+            mf_query=f_mc,
         )
 
         result = self.bbox(e_out)

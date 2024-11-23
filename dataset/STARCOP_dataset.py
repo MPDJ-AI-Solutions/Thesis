@@ -28,15 +28,19 @@ class STARCOPDataset(Dataset):
         self.enable_augmentation = enable_augmentation
 
     def __len__(self):
-        return len(self.csv) * 2 if self.enable_augmentation else len(self.csv)
+        return len(self.csv) * 32 if self.enable_augmentation else len(self.csv) * 16
 
     def __getitem__(self, index):
         return self._augmented_get_item(index) if self.enable_augmentation else self._normal_get_item(index)
 
     def _augmented_get_item(self, index):
-        csv_index = int(index / 2)
+        # TODO FIX this method
+        # ADD BBOX
+        # ADD AUGMENTATION
+        csv_index = int(index / 32)
+
         image_directory_path = os.path.join(self.images_path, self.csv["id"][csv_index])
-        result_image = self.image_info.load_tensor(image_directory_path)
+        result_image = self.image_info.load_tensor(image_directory_path, grid_id=index % 16)
         image, filtered_image, _, _, mask, _ = result_image
         if index % 2 == 0:
             return result_image
@@ -45,9 +49,10 @@ class STARCOPDataset(Dataset):
             return image, filtered_image, result_image[2], result_image[3], mask, result_image[5]
 
     def _normal_get_item(self, index):
-        images_directory_path = os.path.join(self.images_path, self.csv["id"][index])
+        file_index = index // 16
+        images_directory_path = os.path.join(self.images_path, self.csv["id"][file_index])
 
-        return self.image_info.load_tensor(images_directory_path)
+        return self.image_info.load_tensor(images_directory_path, grid_id=index % 16)
 
     @staticmethod
     def _augment(image, filtered_image, mask):
