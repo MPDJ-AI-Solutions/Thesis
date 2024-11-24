@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # Load model
     image = image_result
     model_handler = ModelFilesHandler()
-    model, _, _, _ = model_handler.load_model(file_name=r"trained_models\model_transformer_2024_11_23_13_49_39.pickle")
+    model, _, _, _ = model_handler.load_model(file_name=r"trained_models\model_transformer_2024_11_24_13_30_30.pickle")
     mask = image[4][0, 0, :, :]
     model.to("cuda")
     predicted_bbox, predicted_confidence = model(image[0].to("cuda"), image[1].to("cuda"), image[2].to("cuda"))
