@@ -1,18 +1,15 @@
-from datetime import datetime
-
 import torch
-from torch import optim, nn
-from torch.nn import BCEWithLogitsLoss, BCELoss, SmoothL1Loss, L1Loss
+from torch import optim
+from torch.nn import BCEWithLogitsLoss, SmoothL1Loss
 from torch.utils.data import DataLoader
 
 from dataset.STARCOP_dataset import STARCOPDataset
-from dataset.dataset_info import FilteredSpectralImageInfo
+from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.measures.model_type import ModelType
-from models.Tools.model_files_handler import ModelFilesHandler
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
+from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
 from models.TransformerMethaneDetection.dice_loss import DiceLoss
-from models.TransformerMethaneDetection.focal_loss import FocalLoss
 from models.TransformerMethaneDetection.hungarian_matcher import HungarianMatcher
 
 from .model import TransformerModel
@@ -225,14 +222,14 @@ if __name__ == "__main__":
     dataset_train = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.EASY_TRAIN,
-        image_info_class=FilteredSpectralImageInfo,
-        enable_augmentation=False
+        image_info_class=SegmentationDatasetInfo,
+        normalization=False
     )
     dataset_test = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.TEST,
-        image_info_class=FilteredSpectralImageInfo,
-        enable_augmentation=False
+        image_info_class=SegmentationDatasetInfo,
+        normalization=False
     )
 
     train_dataloader = DataLoader(dataset_train, batch_size=48, shuffle=True)

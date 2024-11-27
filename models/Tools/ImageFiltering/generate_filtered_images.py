@@ -4,9 +4,10 @@ import torch
 
 from pathlib import Path
 from torch.utils.data import DataLoader
-from dataset.STARCOP_dataset_before_slf import STARCOPDatasetPreSLF
-from dataset.dataset_info import TransformerModelSpectralImageInfo
+
+from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
+from models.Tools.ImageFiltering.STARCOP_dataset_before_slf import STARCOPDatasetPreSLF
 from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_linear_filter import \
     SpectralLinearFilterParallel
 
@@ -17,7 +18,7 @@ def generate_images():
     dataset = STARCOPDatasetPreSLF(
         r"../../../data",
         data_type=DatasetType.TRAIN,
-        image_info_class=TransformerModelSpectralImageInfo
+        image_info_class=SegmentationDatasetInfo
     )
     dataloader = DataLoader(dataset, batch_size=12, shuffle=True)
 
@@ -26,7 +27,7 @@ def generate_images():
     model.eval()
     with torch.no_grad():
         for batch_idx, (data, file_paths) in enumerate(dataloader):
-            images, _ = TransformerModelSpectralImageInfo.backbone_input_converter(data)
+            images, _ = SegmentationDatasetInfo.backbone_input_converter(data)
             processed_images = model(images, methane_pattern)
             for img, file_path in zip(processed_images, file_paths):
                 save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result.npy")

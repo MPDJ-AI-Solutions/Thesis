@@ -1,29 +1,30 @@
 import torch
 import torch.nn as nn
-from PIL.ImageQt import toqimage
+
 from torch.utils.data import DataLoader
 from transformers import DetrForSegmentation, AdamW, DetrConfig
 
 from dataset.STARCOP_dataset import STARCOPDataset
-from dataset.dataset_info import FilteredSpectralImageInfo
+from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.measures.model_type import ModelType
-from models.Tools.model_files_handler import ModelFilesHandler
+
+from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
 
 
 def create_datasets():
     dataset_train = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.EASY_TRAIN,
-        image_info_class=FilteredSpectralImageInfo,
+        image_info_class=SegmentationDatasetInfo,
         normalization=False
     )
 
     dataset_test = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.TEST,
-        image_info_class=FilteredSpectralImageInfo,
+        image_info_class=SegmentationDatasetInfo,
         normalization=False
     )
 

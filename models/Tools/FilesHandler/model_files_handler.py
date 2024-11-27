@@ -1,13 +1,13 @@
 import os
 import pickle
-from typing import Tuple
-
 import pandas as pd
 
 from torch import nn
+from typing import Tuple
 from datetime import datetime
-from models.Tools.measures.model_type import ModelType
-from models.Tools.model_wrapper import ModelWrapper
+
+from models.Tools.FilesHandler.model_wrapper import ModelWrapper
+from models.Tools.Measures.model_type import ModelType
 
 
 class ModelFilesHandler:

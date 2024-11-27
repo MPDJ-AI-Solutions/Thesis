@@ -5,23 +5,12 @@ import torch
 import numpy as np
 
 
-class SpectralImageInfo:
+class DatasetInfo:
     """
     Class used to gather associated information about a data record.
     """
     @staticmethod
     def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
-        raise NotImplementedError
-
-class FilteredSpectralImageInfo(SpectralImageInfo):
-    @staticmethod
-    def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
-        """
-        Loads tensor....
-
-        - path: str
-
-        """
         images_AVIRIS = [
             cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
         ]
@@ -33,26 +22,52 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
             filtered_image = np.zeros((512, 512), dtype=np.float32)
 
         mag1c = cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
-
-
-        label_rgba = cv2.imread(os.path.join(path, "label_rgba.tif"), cv2.IMREAD_UNCHANGED)
         label_binary = cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED)
 
-        x_start = grid_id // crop_size * (512 / crop_size)
-        x_end = (grid_id // crop_size + 1) * (512 / crop_size)
-        y_start = (grid_id % crop_size) * (512 / crop_size)
-        y_end = (grid_id % crop_size + 1) * (512 / crop_size)
+        x_start = grid_id // crop_size * (512 // crop_size)
+        x_end = (grid_id // crop_size + 1) * (512 // crop_size)
+        y_start = (grid_id % crop_size) * (512 // crop_size)
+        y_end = (grid_id % crop_size + 1) * (512 // crop_size)
 
         tensor_AVIRIS = torch.tensor(np.array(images_AVIRIS), dtype=torch.float32)[:, x_start:x_end, y_start:y_end]
-        tensor_filtered_image = torch.tensor(np.array(filtered_image), dtype=torch.float32).unsqueeze(0)[:, x_start:x_end, y_start:y_end]
+        tensor_filtered_image = torch.tensor(np.array(filtered_image), dtype=torch.float32).unsqueeze(0)[:,
+                                x_start:x_end, y_start:y_end]
         tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)[:, x_start:x_end, y_start:y_end]
-        tensor_labels_rgba = torch.tensor(np.array(label_rgba), dtype=torch.float32).permute(2, 0, 1)[:,x_start:x_end, y_start:y_end]
 
         part_label_binary = label_binary[x_start:x_end, y_start:y_end]
         tensor_labels_binary = torch.tensor(np.array(part_label_binary), dtype=torch.float32).unsqueeze(0)
-        tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = FilteredSpectralImageInfo.add_bbox(part_label_binary, 256, 256)
 
-        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_binary_masks, tensor_bboxes, tensor_bboxes_labels
+        return tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary
+
+
+class ClassifierDatasetInfo(DatasetInfo):
+    @staticmethod
+    def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
+        """
+        Loads tensor....
+
+        - path: str
+
+        """
+        tensor_AVIRIS, tensor_mag1c, _, tensor_labels_binary = super().load_tensor(path, grid_id, crop_size)
+
+        return tensor_AVIRIS, tensor_mag1c, torch.any(tensor_labels_binary == 1),
+
+
+class SegmentationDatasetInfo(DatasetInfo):
+    @staticmethod
+    def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
+        """
+        Loads tensor....
+
+        - path: str
+
+        """
+        tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary  = super().load_tensor(path, grid_id, crop_size)
+
+        tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = SegmentationDatasetInfo.add_bbox(tensor_labels_binary.numpy(), 256, 256)
+
+        return tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_binary_masks, tensor_bboxes, tensor_bboxes_labels
 
     @staticmethod
     def add_bbox(image, height, width, num_queries = 10):
@@ -92,43 +107,3 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
             result_masks[i, y:y + h, x:x + w] = torch.tensor(mask, dtype=torch.float32) / 255.0
 
         return result_bbox, result_labels, result_masks
-
-
-class ClassifierSpectralImageInfo(SpectralImageInfo):
-    @staticmethod
-    def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
-        """
-        Loads tensor....
-
-        - path: str
-
-        """
-        images_AVIRIS = [
-            cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
-        ]
-
-        filtered_image_path = os.path.join(path, "slf_result.npy")
-        if os.path.isfile(filtered_image_path):
-            filtered_image = np.load(filtered_image_path)
-        else:
-            filtered_image = np.zeros((512, 512), dtype=np.float32)
-
-        mag1c = cv2.imread(os.path.join(path, "mag1c.tif"), cv2.IMREAD_UNCHANGED),
-
-
-        label_binary = cv2.imread(os.path.join(path, "labelbinary.tif"), cv2.IMREAD_UNCHANGED)
-
-        x_start = grid_id // crop_size * (512 // crop_size)
-        x_end = (grid_id // crop_size + 1) * (512 // crop_size)
-        y_start = (grid_id % crop_size) * (512 // crop_size)
-        y_end = (grid_id % crop_size + 1) * (512 // crop_size)
-
-        tensor_AVIRIS = torch.tensor(np.array(images_AVIRIS), dtype=torch.float32)[:, x_start:x_end, y_start:y_end]
-        tensor_filtered_image = torch.tensor(np.array(filtered_image), dtype=torch.float32).unsqueeze(0)[:, x_start:x_end, y_start:y_end]
-        tensor_mag1c = torch.tensor(np.array(mag1c), dtype=torch.float32)[:, x_start:x_end, y_start:y_end]
-
-        part_label_binary = label_binary[x_start:x_end, y_start:y_end]
-        tensor_labels_binary = torch.tensor(np.array(part_label_binary), dtype=torch.float32).unsqueeze(0)
-
-
-        return tensor_AVIRIS, tensor_mag1c, torch.any(tensor_labels_binary == 1),

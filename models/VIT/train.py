@@ -1,30 +1,31 @@
 import torch
+
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from dataset.dataset_info import ClassifierSpectralImageInfo
+from dataset.dataset_info import ClassifierDatasetInfo
 from dataset.dataset_type import DatasetType
-from dataset.STARCOP_classifier_dataset import STARCOPDataset
+from dataset.STARCOP_dataset import STARCOPDataset
 
-from models.Tools.measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.measures.model_type import ModelType
-from models.Tools.model_files_handler import ModelFilesHandler
 from models.VIT.model import CustomViT
+from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
+from models.Tools.Measures.model_type import ModelType
 
 
 def setup_dataloaders(data_path: str = r"data", batch_size: int = 32):
     train_dataset = STARCOPDataset(
         data_path=data_path,
         data_type=DatasetType.EASY_TRAIN,
-        image_info_class=ClassifierSpectralImageInfo,
+        image_info_class=ClassifierDatasetInfo,
     )
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     test_dataset = STARCOPDataset(
         data_path=data_path,
         data_type=DatasetType.TEST,
-        image_info_class=ClassifierSpectralImageInfo,
+        image_info_class=ClassifierDatasetInfo,
     )
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
@@ -61,7 +62,7 @@ def train(criterion, device, epochs, model, optimizer, dataloader, transform):
         print(f"Epoch {epoch + 1}, Loss: {running_loss / len(dataloader)}")
 
 
-def evaluate(criterion, device, model, optimizer, dataloader, transform, measurer):
+def evaluate(criterion, device, model, dataloader, transform, measurer):
     model.eval()
     all_predictions = []
     all_labels = []
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     ])
 
     train(criterion, device, epochs, model, optimizer, train_dataloader, transform)
-    measures = evaluate(criterion, device, model, optimizer, test_dataloader, transform, measurer)
+    measures = evaluate(criterion, device, model, test_dataloader, transform, measurer)
 
     model_handler.save_model(
         model=model,

@@ -1,19 +1,19 @@
 import os
-from pathlib import Path
-
 import pandas as pd
 
-from torch.utils.data import Dataset
-from .dataset_info import SpectralImageInfo
-from .dataset_type import DatasetType
+from pathlib import Path
 from typing import Type
+from torch.utils.data import Dataset
+
+from dataset.dataset_info import DatasetInfo
+from dataset.dataset_type import DatasetType
 
 
 class STARCOPDatasetPreSLF(Dataset):
     """
     Class is used for custom dataloader. Loads images based on CSV description of data.
     """
-    def __init__(self, data_path: str, data_type: DatasetType, image_info_class: Type[SpectralImageInfo]):
+    def __init__(self, data_path: str, data_type: DatasetType, image_info_class: Type[DatasetInfo]):
         self.images_path = os.path.join(data_path, data_type.get_folder_name(), data_type.get_folder_name())
         self.image_info = image_info_class
         self.csv = pd.read_csv(os.path.join(data_path, data_type.value + ".csv"))

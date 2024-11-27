@@ -1,19 +1,19 @@
 import unittest
 
 from dataset.STARCOP_dataset import STARCOPDataset, DatasetType
-from dataset.dataset_info import SpectralImageInfo
+from dataset.dataset_info import DatasetInfo
 
 class STARCOPDatasetTests(unittest.TestCase):
     def test_STARCOPDataset_correct_path(self):
         # Arrange
-        class TestSpectralImageInfo(SpectralImageInfo):
+        class TestDatasetInfo(DatasetInfo):
             @staticmethod
             def load_tensor(path: str):
                 return path
 
         dataset = STARCOPDataset(data_path="data",
                                  data_type=DatasetType.UNITTEST,
-                                 image_info_class=TestSpectralImageInfo)
+                                 image_info_class=TestDatasetInfo)
 
         # Act
         path = dataset.__getitem__(0)

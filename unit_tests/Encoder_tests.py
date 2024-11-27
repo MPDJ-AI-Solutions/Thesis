@@ -4,7 +4,7 @@ import torch
 from numpy.testing import assert_equal
 
 from models.TransformerMethaneDetection.Transformer.encoder import Encoder
-from models.TransformerMethaneDetection.Transformer.position_encoding import PositionalEncoding
+from models.TransformerMethaneDetection.Transformer.position_encoding import PositionalEncodingMM
 
 
 class EncoderTests(unittest.TestCase):
@@ -14,7 +14,7 @@ class EncoderTests(unittest.TestCase):
         d_model = 256
         bs = 8
         backbone_output = torch.rand(bs, int(H/32), int(W/32), d_model)
-        pos_encoder = PositionalEncoding(d_model=d_model, height=int(H/32), width=int(W/32))
+        pos_encoder = PositionalEncodingMM(d_model=d_model, height=int(H / 32), width=int(W / 32))
 
         encoder_input = pos_encoder(backbone_output)
 

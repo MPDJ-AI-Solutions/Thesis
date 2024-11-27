@@ -1,12 +1,14 @@
 import cv2
 import torch
+
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 
 from dataset.STARCOP_dataset import STARCOPDataset
-from dataset.dataset_info import FilteredSpectralImageInfo
+from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.model_files_handler import ModelFilesHandler
+from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+
 from models.DETR.model import DetrWith9Channels
 
 if __name__ == '__main__':
@@ -16,7 +18,7 @@ if __name__ == '__main__':
     dataset = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.EASY_TRAIN,
-        image_info_class=FilteredSpectralImageInfo,
+        image_info_class=SegmentationDatasetInfo,
         normalization=False
     )
 
