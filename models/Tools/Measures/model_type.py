@@ -7,3 +7,4 @@ class ModelType(Enum):
     """
     CNN = "cnn"
     TRANSFORMER = "transformer"
+    TRANSFORMER_CLASSIFIER = "transformer_classifier"

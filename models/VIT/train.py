@@ -81,7 +81,7 @@ def evaluate(criterion, device, model, optimizer, dataloader, transform, measure
         all_labels.append(labels.cpu().detach())
 
     measures = measurer.compute_measures(torch.cat(all_predictions), torch.cat(all_labels))
-    print(f"Validation loss: {running_loss / len(dataloader)}.\nMeasures: {measures}")
+    print(f"Validation loss: {running_loss / len(dataloader)}.\nMeasures:\n{measures}")
     return measures
 
 

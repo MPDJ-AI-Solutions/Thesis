@@ -99,11 +99,10 @@ class MeasureToolTransformer(MeasureTool):
 
     @staticmethod
     def auc(result: torch.Tensor, target: torch.Tensor) -> float:
-        return 0
-
+        return roc_auc_score(target.flatten(), result.flatten())
 
     @staticmethod
     def ci(result: torch.Tensor, target: torch.Tensor) -> float:
-        std = result.std().item()
-        ci = std * 1.96 / (result.numel() ** 0.5)
+        std = result.float().std().item()
+        ci = std * 1.96 / (result.float().numel() ** 0.5)
         return ci
