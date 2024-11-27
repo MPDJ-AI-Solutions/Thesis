@@ -4,6 +4,7 @@ import cv2
 import torch
 import numpy as np
 
+
 class SpectralImageInfo:
     """
     Class used to gather associated information about a data record.
@@ -49,9 +50,9 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
 
         part_label_binary = label_binary[x_start:x_end, y_start:y_end]
         tensor_labels_binary = torch.tensor(np.array(part_label_binary), dtype=torch.float32).unsqueeze(0)
-        tensor_bboxes, tensor_bboxes_labels = FilteredSpectralImageInfo.add_bbox(part_label_binary, 256, 256)
+        tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = FilteredSpectralImageInfo.add_bbox(part_label_binary, 256, 256)
 
-        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_labels_binary, tensor_bboxes, tensor_bboxes_labels
+        return tensor_AVIRIS, tensor_filtered_image, tensor_mag1c, tensor_labels_rgba, tensor_binary_masks, tensor_bboxes, tensor_bboxes_labels
 
     @staticmethod
     def add_bbox(image, height, width, num_queries = 10):
@@ -72,6 +73,7 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
 
         result_bbox = torch.zeros((num_queries, 4), dtype=torch.float32)
         result_labels = torch.zeros((num_queries,), dtype=torch.int64)
+        result_masks = torch.zeros((num_queries, width, height ), dtype=torch.uint8)
 
         for i, contour in enumerate(contours[:num_queries]):
             x, y, w, h = cv2.boundingRect(contour)
@@ -84,5 +86,9 @@ class FilteredSpectralImageInfo(SpectralImageInfo):
             result_bbox[i, :] = torch.tensor([cx, cy, w_scaled, h_scaled], dtype=torch.float32)
             result_labels[i] = 1
 
+            mask = image[y:y + h, x:x + w]  # The region of the object in the original mask
 
-        return result_bbox, result_labels
+            # Store the mask for the current object (scaled to the full image)
+            result_masks[i, y:y + h, x:x + w] = torch.tensor(mask, dtype=torch.float32) / 255.0
+
+        return result_bbox, result_labels, result_masks

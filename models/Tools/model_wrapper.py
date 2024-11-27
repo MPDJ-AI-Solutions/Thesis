@@ -1,7 +1,7 @@
 import pandas as pd
 from torch import nn
 
-from models.Tools.Measures.model_type import ModelType
+from models.Tools.measures.model_type import ModelType
 
 
 class ModelWrapper(object):
