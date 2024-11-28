@@ -49,7 +49,7 @@ class ClassifierDatasetInfo(DatasetInfo):
         - path: str
 
         """
-        tensor_AVIRIS, tensor_mag1c, _, tensor_labels_binary = super().load_tensor(path, grid_id, crop_size)
+        tensor_AVIRIS, tensor_mag1c, _, tensor_labels_binary = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
         return tensor_AVIRIS, tensor_mag1c, torch.any(tensor_labels_binary == 1),
 
@@ -63,7 +63,7 @@ class SegmentationDatasetInfo(DatasetInfo):
         - path: str
 
         """
-        tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary  = super().load_tensor(path, grid_id, crop_size)
+        tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary  = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
         tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = SegmentationDatasetInfo.add_bbox(tensor_labels_binary.numpy(), 256, 256)
 
