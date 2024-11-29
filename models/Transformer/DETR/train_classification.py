@@ -9,20 +9,18 @@ from models.Tools.Train.train_classifier import setup_dataloaders, setup_model, 
 
 
 if __name__ == "__main__":
-    epochs = 20
+    epochs = 40
     device = "cuda" if torch.cuda.is_available() else "cpu"
     lr = 1e-5
 
-    train_dataloader, test_dataloader = setup_dataloaders()
+    train_dataloader, test_dataloader = setup_dataloaders(batch_size=16)
     model = CustomDetrForClassification()
     model, criterion, optimizer = setup_model(model, lr, device)
     model_handler = ModelFilesHandler()
     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
 
-    transform = transforms.Compose([transforms.ToTensor(), ])
-
-    train(criterion, device, epochs, model, optimizer, train_dataloader, transform)
-    measures = evaluate(criterion, device, model, test_dataloader, transform, measurer)
+    train(criterion, device, epochs, model, optimizer, train_dataloader, log_batches = True)
+    measures = evaluate(criterion, device, model, test_dataloader, measurer)
 
     model_handler.save_model(
         model=model,

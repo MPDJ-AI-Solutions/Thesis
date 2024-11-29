@@ -51,6 +51,7 @@ class CustomDetrForClassification(nn.Module):
         config = DetrConfig.from_pretrained(detr_model_name)
         config.num_labels = num_classes  # Number of classification labels
         config.use_decoder = True  # Ensure the decoder is retained for processing queries
+        config.output_hidden_states = True  # Ensure hidden states are returned
         self.detr = DetrForObjectDetection(config=config)
 
         # Modify the first convolutional layer of the backbone to accept 9 channels

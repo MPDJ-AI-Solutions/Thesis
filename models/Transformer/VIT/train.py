@@ -24,7 +24,7 @@ if __name__ == "__main__":
     ])
 
     train(criterion, device, epochs, model, optimizer, train_dataloader, transform)
-    measures = evaluate(criterion, device, model, test_dataloader, transform, measurer)
+    measures = evaluate(criterion, device, model, test_dataloader, measurer, transform)
 
     model_handler.save_model(
         model=model,

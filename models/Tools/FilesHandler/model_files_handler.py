@@ -60,6 +60,8 @@ class ModelFilesHandler:
 
         final_row.to_csv(self.csv_path, mode='a', index=False, header=False)
 
+        return model_path
+
     def load_model(self, csv_id: int = -1, file_name: str = "") -> Tuple[nn.Module, ModelType, pd.DataFrame, int]:
         assert (csv_id != -1 and csv_id >= 0) or file_name != "", "You need to specify id or file name."
         assert not ((csv_id >= 0) and not (file_name != "")), "You cannot specify id and file name in the same time."
