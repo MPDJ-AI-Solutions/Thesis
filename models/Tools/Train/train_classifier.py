@@ -2,16 +2,11 @@ import torch
 
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.transforms import transforms
 
 from dataset.dataset_info import ClassifierDatasetInfo
 from dataset.dataset_type import DatasetType
 from dataset.STARCOP_dataset import STARCOPDataset
 
-from models.VIT.model import CustomViT
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
-from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.Measures.model_type import ModelType
 
 
 def setup_dataloaders(data_path: str = r"data", batch_size: int = 32):
@@ -32,8 +27,8 @@ def setup_dataloaders(data_path: str = r"data", batch_size: int = 32):
     return train_dataloader, test_dataloader
 
 
-def setup_model(lr: float, device: str):
-    model = CustomViT().to(device)
+def setup_model(model: nn.Module, lr: float, device: str):
+    model = model().to(device)
 
     criterion = nn.CrossEntropyLoss()  # Binary classification
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -84,29 +79,3 @@ def evaluate(criterion, device, model, dataloader, transform, measurer):
     measures = measurer.compute_measures(torch.cat(all_predictions), torch.cat(all_labels))
     print(f"Validation loss: {running_loss / len(dataloader)}.\nMeasures:\n{measures}")
     return measures
-
-
-if __name__ == "__main__":
-    epochs = 10
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    lr = 1e-4
-
-    train_dataloader, test_dataloader = setup_dataloaders()
-    model, criterion, optimizer = setup_model(lr, device)
-    model_handler = ModelFilesHandler()
-    measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
-
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize images to 224x224
-        transforms.Normalize(mean=[0.5] * 9, std=[0.5] * 9)  # Normalize for 9 channels
-    ])
-
-    train(criterion, device, epochs, model, optimizer, train_dataloader, transform)
-    measures = evaluate(criterion, device, model, test_dataloader, transform, measurer)
-
-    model_handler.save_model(
-        model=model,
-        metrics = measures,
-        model_type=ModelType.TRANSFORMER_CLASSIFIER,
-        epoch=epochs,
-    )

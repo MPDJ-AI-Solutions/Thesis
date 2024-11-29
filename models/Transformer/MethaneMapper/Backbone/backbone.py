@@ -1,8 +1,6 @@
-from typing import Tuple, Any
-
 import torch
 import torch.nn as nn
-from models.TransformerMethaneDetection.Backbone.custom_resnet import CustomResnet
+from models.Transformer.MethaneMapper.Backbone.custom_resnet import CustomResnet
 
 class Backbone(nn.Module):
     """

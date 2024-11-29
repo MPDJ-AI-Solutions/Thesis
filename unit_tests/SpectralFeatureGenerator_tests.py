@@ -2,7 +2,7 @@ import unittest
 import torch
 
 from numpy.ma.testutils import assert_equal
-from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
+from models.Transformer.MethaneMapper.SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
 
 class SpectralFeatureGeneratorTests(unittest.TestCase):
     def test_SFG(self):

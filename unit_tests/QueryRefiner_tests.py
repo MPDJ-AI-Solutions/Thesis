@@ -3,7 +3,7 @@ import unittest
 import torch
 from numpy.ma.testutils import assert_equal
 
-from models.TransformerMethaneDetection.Transformer.query_refiner import QueryRefiner
+from models.Transformer.MethaneMapper import QueryRefiner
 
 
 class QueryRefinerTests(unittest.TestCase):

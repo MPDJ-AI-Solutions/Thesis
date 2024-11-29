@@ -1,12 +1,12 @@
 import torch
-import torch.nn as nn
 
 from torch.utils.data import DataLoader
-from transformers import DetrForSegmentation, AdamW, DetrConfig
+from transformers import AdamW
 
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
+from models.Transformer.DETR.model import CustomDetr
 
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
 from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
@@ -30,54 +30,13 @@ def create_datasets():
 
     return dataset_train, dataset_test
 
-class DetrWith9Channels(nn.Module):
-    def __init__(self, detr_model_name="facebook/detr-resnet-50", num_channels=9):
-        super().__init__()
-
-        # Load pre-trained DETR model
-        config = DetrConfig.from_pretrained(detr_model_name)
-        config.num_labels = 2  # One foreground class + background
-        config.num_queries = 10
-        config.use_masks = True
-
-        self.detr = DetrForSegmentation(config=config)
-
-        # Modify the first convolutional layer of the backbone to accept 9 channels
-        # Access the backbone
-        backbone = self.detr.detr.model.backbone
-
-        # Modify the first convolutional layer
-        conv1 = backbone.conv_encoder.model.conv1
-        new_conv1 = nn.Conv2d(
-            in_channels=num_channels,
-            out_channels=conv1.out_channels,
-            kernel_size=conv1.kernel_size,
-            stride=conv1.stride,
-            padding=conv1.padding,
-            bias=conv1.bias,
-        )
-
-        # Replace the original conv1 with the new one
-        backbone.conv_encoder.model.conv1 = new_conv1
-
-        # Freeze backbone layers except the first conv layer
-        for name, param in backbone.named_parameters():
-            if "conv1" in name:
-                param.requires_grad = True
-            else:
-                param.requires_grad = False
-
-    def forward(self, pixel_values, labels):
-        return self.detr(pixel_values, labels = labels)
-
-
 if __name__ == "__main__":
     num_epochs = 50
     learning_rate = 1e-5
     batch_size = 64
     device = "cuda"
 
-    model = DetrWith9Channels()
+    model = CustomDetr()
     model.to(device)
     model.train()
 

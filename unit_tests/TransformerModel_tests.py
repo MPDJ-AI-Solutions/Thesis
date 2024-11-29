@@ -2,10 +2,8 @@ import unittest
 
 import torch
 from numpy.testing import assert_equal
-import torch.optim as optim
-from torch.utils.data import DataLoader
 
-from models.TransformerMethaneDetection.model import TransformerModel as Model
+from models.Transformer.MethaneMapper import TransformerModel as Model
 
 class STARCOPDatasetTests(unittest.TestCase):
     def test_TransformerModel(self):

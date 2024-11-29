@@ -2,12 +2,11 @@ import unittest
 
 import torch
 from numpy.ma.testutils import assert_equal
-from torch.cuda import device
 
-from models.TransformerMethaneDetection.Transformer.encoder import Encoder
-from models.TransformerMethaneDetection.Transformer.position_encoding import PositionalEncodingMM
-from models.TransformerMethaneDetection.Transformer.query_refiner import QueryRefiner
-from models.TransformerMethaneDetection.Transformer.hyperspectral_decoder import HyperspectralDecoder
+from models.Transformer.MethaneMapper import Encoder
+from models.Transformer.MethaneMapper.Transformer.position_encoding import PositionalEncodingMM
+from models.Transformer.MethaneMapper import QueryRefiner
+from models.Transformer.MethaneMapper import HyperspectralDecoder
 
 
 class HyperspectralDecoderTests(unittest.TestCase):

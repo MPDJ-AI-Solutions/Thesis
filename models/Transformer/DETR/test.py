@@ -9,8 +9,6 @@ from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
 
-from models.DETR.model import DetrWith9Channels
-
 if __name__ == '__main__':
     # Load original image
 

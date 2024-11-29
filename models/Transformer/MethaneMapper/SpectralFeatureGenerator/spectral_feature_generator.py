@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 
-from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_linear_filter import SpectralLinearFilter
-from models.TransformerMethaneDetection.SpectralFeatureGenerator.feature_extractor import FeatureExtractor
+from models.Transformer.MethaneMapper.SpectralFeatureGenerator.feature_extractor import FeatureExtractor
 
 class SpectralFeatureGenerator(nn.Module):
     """
