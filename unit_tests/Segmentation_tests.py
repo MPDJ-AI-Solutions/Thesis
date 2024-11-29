@@ -3,7 +3,7 @@ import torch
 
 from numpy.ma.testutils import assert_equal
 
-from models.TransformerMethaneDetection.Segmentation.segmentation import BoxAndMaskPredictor
+from models.Transformer.MethaneMapper.Segmentation.segmentation import BoxAndMaskPredictor
 
 
 class STARCOPDatasetTests(unittest.TestCase):

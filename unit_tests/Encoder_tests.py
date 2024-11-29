@@ -3,8 +3,8 @@ import unittest
 import torch
 from numpy.testing import assert_equal
 
-from models.TransformerMethaneDetection.Transformer.encoder import Encoder
-from models.TransformerMethaneDetection.Transformer.position_encoding import PositionalEncodingMM
+from models.Transformer.MethaneMapper import Encoder
+from models.Transformer.MethaneMapper.Transformer.position_encoding import PositionalEncodingMM
 
 
 class EncoderTests(unittest.TestCase):

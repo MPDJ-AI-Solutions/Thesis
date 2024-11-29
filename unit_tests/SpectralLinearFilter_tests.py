@@ -3,7 +3,7 @@ import unittest
 import torch
 from numpy.ma.testutils import assert_equal
 
-from models.TransformerMethaneDetection.SpectralFeatureGenerator.spectral_linear_filter import SpectralLinearFilter, SpectralLinearFilterParallel
+from models.Transformer.MethaneMapper.SpectralFeatureGenerator.spectral_linear_filter import SpectralLinearFilter, SpectralLinearFilterParallel
 
 
 class SpectralLinearFilterTests(unittest.TestCase):

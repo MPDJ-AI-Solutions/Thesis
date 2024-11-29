@@ -8,7 +8,7 @@ import pandas as pd
 
 from models.Tools.Measures.model_type import ModelType
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
-from models.TransformerMethaneDetection.model import TransformerModel
+from models.Transformer.MethaneMapper import TransformerModel
 
 
 class ModelFilesHandlerTests(unittest.TestCase):

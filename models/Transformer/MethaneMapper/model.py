@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 
 from .Segmentation.bbox_prediction import BBoxPrediction
+from .Segmentation.segmentation import BoxAndMaskPredictor
 from .SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
 from .Backbone.backbone import Backbone
 from .Transformer.encoder import Encoder
 from .Transformer.hyperspectral_decoder import HyperspectralDecoder
 from .Transformer.position_encoding import PositionalEncodingMM
 from .Transformer.query_refiner import QueryRefiner
+from .model_type import ModelType
 
 
 class TransformerModel(nn.Module):
@@ -25,6 +27,7 @@ class TransformerModel(nn.Module):
                  n_decoder_layers: int = 6,
                  n_queries: int = 100,
                  threshold: float = 0.5,
+                 model_type: ModelType = ModelType.CLASSIFICATION,
                  ):
         super(TransformerModel, self).__init__()
 
@@ -40,8 +43,22 @@ class TransformerModel(nn.Module):
 
         self.query_refiner = QueryRefiner(d_model=d_model, num_heads=attention_heads, num_queries=n_queries)
         self.decoder = HyperspectralDecoder(d_model=d_model, n_heads=attention_heads, num_layers=n_decoder_layers)
-        self.bbox = BBoxPrediction(d_model=d_model)
 
+
+        self.head = None
+        match model_type:
+            case ModelType.CLASSIFICATION:
+                # TODO add classification  head
+                self.head = nn.Linear(in_features=d_model, out_features=d_model)
+            case ModelType.SEGMENTATION:
+                self.head = BoxAndMaskPredictor(
+                    result_width=image_width,
+                    result_height=image_height,
+                    fpn_channels=backbone_out_channels,
+                    embedding_dim=d_model,
+                )
+            case ModelType.ONLY_BBOX:
+                self.head = BBoxPrediction(d_model=d_model)
 
     def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -67,6 +84,6 @@ class TransformerModel(nn.Module):
             q_ref
         )
 
-        result = self.bbox(e_out)
+        result = self.head(e_out)
 
         return result

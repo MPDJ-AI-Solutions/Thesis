@@ -2,7 +2,7 @@ import unittest
 import torch
 
 from numpy.ma.testutils import assert_equal
-from models.TransformerMethaneDetection.Backbone.backbone import Backbone
+from models.Transformer.MethaneMapper.Backbone.backbone import Backbone
 
 class BackboneTests(unittest.TestCase):
     def test_backbone_load_data(self):

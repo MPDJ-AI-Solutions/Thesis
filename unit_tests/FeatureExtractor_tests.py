@@ -3,7 +3,7 @@ import unittest
 import torch
 from numpy.ma.testutils import assert_equal
 
-from models.TransformerMethaneDetection.SpectralFeatureGenerator.feature_extractor import FeatureExtractor
+from models.Transformer.MethaneMapper.SpectralFeatureGenerator.feature_extractor import FeatureExtractor
 
 
 class FeatureExtractorTests(unittest.TestCase):

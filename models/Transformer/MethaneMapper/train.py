@@ -9,8 +9,8 @@ from dataset.dataset_type import DatasetType
 from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
 from models.Tools.Measures.model_type import ModelType
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
-from models.TransformerMethaneDetection.Segmentation.dice_loss import DiceLoss
-from models.TransformerMethaneDetection.Segmentation.hungarian_matcher import HungarianMatcher
+from models.Transformer.MethaneMapper.Segmentation.dice_loss import DiceLoss
+from models.Transformer.MethaneMapper.Segmentation.hungarian_matcher import HungarianMatcher
 
 from .model import TransformerModel
 
