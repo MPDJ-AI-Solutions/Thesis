@@ -20,13 +20,13 @@ class Backbone(nn.Module):
         self.d_model_projection = nn.Conv2d(in_channels=out_channels, out_channels=d_model, kernel_size=1)
 
 
-    def forward(self, hsi: torch.Tensor, mag1c: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, hsi: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         # Input: Shape(bs, 3, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         rgb_result = self.rgb_backbone(self._get_rgb(hsi=hsi))
 
         # Input: Shape(bs, 5, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         swir_result = self.swir_backbone(self._get_swir(hsi=hsi))
-        mag1c_result = self.mag1c_backbone(mag1c)
+        mag1c_result = self.mag1c_backbone(self._get_mag1c(hsi=hsi))
 
         # (bs, 2 * out_channels, h / 32, w / 32) =  (bs, out_channels, h / 32, w / 32) + (bs, out_channels, h / 32, w / 32)
         combined_result = torch.cat((rgb_result, swir_result, mag1c_result), 1)
@@ -47,3 +47,8 @@ class Backbone(nn.Module):
     @staticmethod
     def _get_swir(hsi: torch.Tensor) -> torch.Tensor:
         return hsi[:, 3:8, :, :]
+
+    @staticmethod
+    def _get_mag1c(hsi: torch.Tensor) -> torch.Tensor:
+        return hsi[:, 8:9, :, :]
+

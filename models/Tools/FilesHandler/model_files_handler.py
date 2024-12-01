@@ -39,6 +39,14 @@ class ModelFilesHandler:
         # Save the empty DataFrame as a CSV file
         df.to_csv(self.csv_path, index=False)
 
+    def save_raw_model(self, model: nn.Module):
+        current_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        file_name = f'model_raw_{current_date}.pickle'
+        model_path = os.path.join(self.models_directory_path, file_name)
+
+        with open(model_path, mode='wb') as file:
+            pickle.dump(model, file)
+
     def save_model(self, model: nn.Module, model_type: ModelType, metrics: pd.DataFrame, epoch: int):
         current_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         file_name = f'model_{model_type.value}_{current_date}.pickle'
@@ -73,6 +81,12 @@ class ModelFilesHandler:
             model_path = self._get_file_path(csv_id)
             wrapped_model = self._load_model_from_path(model_path)
             return wrapped_model.model, wrapped_model.model_type, wrapped_model.metrics, wrapped_model.epoch
+
+    def load_raw_model(self, path):
+        with open(path, mode='rb') as file:
+            model = pickle.load(file)
+        return model
+
 
     @staticmethod
     def _load_model_from_path(file_name) -> ModelWrapper:

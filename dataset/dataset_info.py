@@ -3,6 +3,7 @@ import os
 import cv2
 import torch
 import numpy as np
+from huggingface_hub import dataset_info
 
 
 class DatasetInfo:
@@ -52,6 +53,14 @@ class ClassifierDatasetInfo(DatasetInfo):
         tensor_AVIRIS, tensor_mag1c, _, tensor_labels_binary = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
         return tensor_AVIRIS, tensor_mag1c, torch.any(tensor_labels_binary == 1),
+
+
+class MMClassifierDatasetInfo(DatasetInfo):
+    @staticmethod
+    def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
+        tensor_AVIRIS, tensor_mag1c, filtered_image, tensor_labels_binary = DatasetInfo.load_tensor(path, grid_id, crop_size)
+
+        return tensor_AVIRIS, tensor_mag1c, filtered_image, torch.any(tensor_labels_binary == 1),
 
 
 class SegmentationDatasetInfo(DatasetInfo):

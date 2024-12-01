@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+from .Classification.classification import ClassifierPredictor
 from .Segmentation.bbox_prediction import BBoxPrediction
 from .Segmentation.segmentation import BoxAndMaskPredictor
 from .SpectralFeatureGenerator.spectral_feature_generator import SpectralFeatureGenerator
@@ -48,8 +49,10 @@ class TransformerModel(nn.Module):
         self.head = None
         match model_type:
             case ModelType.CLASSIFICATION:
-                # TODO add classification  head
-                self.head = nn.Linear(in_features=d_model, out_features=d_model)
+                self.head = ClassifierPredictor(
+                    num_classes=2,
+                    embedding_dim=d_model,
+                )
             case ModelType.SEGMENTATION:
                 self.head = BoxAndMaskPredictor(
                     result_width=image_width,
@@ -70,7 +73,7 @@ class TransformerModel(nn.Module):
 
         f_comb_proj, f_comb = self.backbone(image)
 
-        positional_encoding = self.positional_encoding(f_comb).expand(batch_size, -1, -1, -1)
+        positional_encoding = self.positional_encoding(f_comb)[0].expand(batch_size, -1, -1, -1)
 
         f_mc = self.spectral_feature_generator(filtered_image)
         f_mc = f_mc.permute(0, 2, 3, 1)
@@ -78,12 +81,12 @@ class TransformerModel(nn.Module):
         q_ref = self.query_refiner(f_mc)
         f_e = self.encoder((f_comb_proj + positional_encoding).flatten(2).permute(0, 2, 1))
 
-        e_out = (self.decoder(
-            f_e.permute(0, 2, 1).view(batch_size, -1, int(height / 32), int(width / 32)) \
-            + positional_encoding).flatten(2).permute(0, 2, 1),
+
+        e_out = self.decoder(
+            (f_e.permute(0, 2, 1).view(batch_size, -1, int(height / 32), int(width / 32)) + positional_encoding).flatten(2).permute(0, 2, 1),
             q_ref
         )
 
-        result = self.head(e_out)
+        result = self.head(e_out, f_e)
 
         return result
