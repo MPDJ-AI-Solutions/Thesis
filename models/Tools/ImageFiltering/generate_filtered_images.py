@@ -12,12 +12,12 @@ from models.Transformer.MethaneMapper.SpectralFeatureGenerator.spectral_linear_f
     SpectralLinearFilterParallel
 
 
-def generate_images():
+def generate_images(data_type):
     methane_pattern = [0, 0, 0, 0.1, 0.3, 0.6, 0.8, 0.7]
 
     dataset = STARCOPDatasetPreSLF(
-        r"../../../data",
-        data_type=DatasetType.TRAIN,
+        r"data",
+        data_type=data_type,
         image_info_class=SegmentationDatasetInfo
     )
     dataloader = DataLoader(dataset, batch_size=12, shuffle=True)
@@ -26,8 +26,7 @@ def generate_images():
 
     model.eval()
     with torch.no_grad():
-        for batch_idx, (data, file_paths) in enumerate(dataloader):
-            images, _ = SegmentationDatasetInfo.backbone_input_converter(data)
+        for batch_idx, (images, file_paths) in enumerate(dataloader):
             processed_images = model(images, methane_pattern)
             for img, file_path in zip(processed_images, file_paths):
                 save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result.npy")
@@ -38,4 +37,4 @@ def generate_images():
 
 
 if __name__ == '__main__':
-    generate_images()
+    generate_images(data_type=DatasetType.TRAIN)

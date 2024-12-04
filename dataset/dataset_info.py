@@ -3,7 +3,6 @@ import os
 import cv2
 import torch
 import numpy as np
-from huggingface_hub import dataset_info
 
 
 class DatasetInfo:
@@ -74,9 +73,10 @@ class SegmentationDatasetInfo(DatasetInfo):
         """
         tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary  = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
-        tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = SegmentationDatasetInfo.add_bbox(tensor_labels_binary.numpy(), 256, 256)
+        tensor_bboxes, tensor_bboxes_labels, tensor_binary_masks = SegmentationDatasetInfo.add_bbox(tensor_labels_binary.numpy(), 512, 512)
 
         return tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_binary_masks, tensor_bboxes, tensor_bboxes_labels
+
 
     @staticmethod
     def add_bbox(image, height, width, num_queries = 10):

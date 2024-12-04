@@ -31,4 +31,4 @@ class STARCOPDatasetPreSLF(Dataset):
 
     def __getitem__(self, index):
         images_directory_path = os.path.join(self.images_path, self.csv["id"][index])
-        return self.image_info.load_tensor(images_directory_path), images_directory_path
+        return self.image_info.load_tensor(images_directory_path)[0], images_directory_path
