@@ -117,7 +117,7 @@ if __name__ == "__main__":
     )
 
     model_handler = ModelFilesHandler()
-    model = model_handler.load_raw_model(r"trained_models/model_raw_2024_12_02_00_29_49.pickle")
+    model, _, _, _ = model_handler.load_model(file_name=r"trained_models/model_transformer_classifier_2024_12_02_00_37_54.pickle")
     model, criterion, optimizer = setup_model(model, lr, device)
     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
 
