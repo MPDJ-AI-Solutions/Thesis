@@ -1,5 +1,6 @@
 from torch import nn
 from torchvision.models import vit_b_16
+from torchvision.transforms import transforms
 
 
 class CustomViT(nn.Module):
@@ -22,5 +23,10 @@ class CustomViT(nn.Module):
             nn.Linear(128, num_classes)
         )
 
+        self.resize = nn.Upsample(size=(224, 224), mode='bilinear', align_corners=False)
+        self.normalize = transforms.Normalize(mean=[0.5] * num_channels, std=[0.5] * num_channels)
+
     def forward(self, x):
+        x = self.resize(x)
+        x = self.normalize(x)
         return self.vit(x)

@@ -55,17 +55,18 @@ def setup_model(model: nn.Module, lr: float, device: str):
     return model, criterion, optimizer
 
 
-def train(criterion, device, epochs, model, optimizer, dataloader, transform: Optional[transforms] = None, log_batches: bool = False):
+def train(criterion, device, epochs, model, optimizer, dataloader, model_handler, log_batches: bool = False):
     model.train()
-    for epoch in range(epochs):  # Adjust the number of epochs
+    for epoch in range(epochs):
+        print(f"Epoch: {epoch}")
         running_loss = 0.0
-        for batch_id, (images, mag1c, labels) in enumerate(dataloader):  # Assume a PyTorch DataLoader is set up
+        for batch_id, (images, mag1c, labels) in enumerate(dataloader):
             optimizer.zero_grad()
 
-            input_image = torch.cat((images, mag1c), dim=1)
+            input_image = torch.cat((images, mag1c), dim=1).to(device)
             labels = labels.long().to(device)
 
-            outputs = model((transform(input_image) if transform else  input_image).to(device))
+            outputs = model(input_image)
 
             loss = criterion(outputs, labels)
             loss.backward()
@@ -73,22 +74,23 @@ def train(criterion, device, epochs, model, optimizer, dataloader, transform: Op
             running_loss += loss.item()
 
             if log_batches and (batch_id + 1) % 10 == 0:
-                print_progress_bar(batch_id / len(dataloader), running_loss / (batch_id + 1))
+                print_progress_bar(batch_id / len(dataloader) * 100, running_loss / (batch_id + 1))
 
         print(f"Epoch {epoch + 1}, Loss: {running_loss / len(dataloader)}")
+        model_handler.save_raw_model(model)
 
 
-def evaluate(criterion, device, model, dataloader, measurer, transform: Optional[transforms] = None):
+def evaluate(criterion, device, model, dataloader, measurer):
     model.eval()
     all_predictions = []
     all_labels = []
     running_loss = 0.0
 
     for batch_id, (images, mag1c, labels) in enumerate(dataloader):
-        input_image = torch.cat((images, mag1c), dim=1)
+        input_image = torch.cat((images, mag1c), dim=1).to(device)
         labels = labels.long().to(device)
 
-        outputs = model((transform(input_image) if transform else  input_image).to(device))
+        outputs = model(input_image)
         predictions = torch.argmax(outputs, dim=1)
         loss = criterion(outputs, labels)
 
@@ -138,50 +140,3 @@ def setup_dataloaders_with_cross_validation(
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     return train_dataloaders, test_dataloader
-
-
-
-def evaluate_cnn(criterion, device, model, dataloader, measurer, transform: Optional[transforms] = None):
-    model.eval()
-    all_predictions = []
-    all_labels = []
-    running_loss = 0.0
-
-    for batch_id, (images, mag1c, labels) in enumerate(dataloader):
-        input_image = images
-        labels = labels.long().to(device)
-
-        outputs = model((transform(input_image) if transform else  input_image).to(device))
-        predictions = torch.argmax(outputs, dim=1)
-        loss = criterion(outputs, labels)
-
-        running_loss += loss.item()
-        all_predictions.append(predictions.cpu().detach())
-        all_labels.append(labels.cpu().detach())
-
-    measures = measurer.compute_measures(torch.cat(all_predictions), torch.cat(all_labels))
-    print(f"Validation loss: {running_loss / len(dataloader)}.\nMeasures:\n{measures}")
-    return measures
-
-
-def train_cnn(criterion, device, epochs, model, optimizer, dataloader, transform: Optional[transforms] = None, log_batches: bool = False):
-    model.train()
-    for epoch in range(epochs):  # Adjust the number of epochs
-        running_loss = 0.0
-        for batch_id, (images, mag1c, labels) in enumerate(dataloader):  # Assume a PyTorch DataLoader is set up
-            optimizer.zero_grad()
-
-            input_image =  images
-            labels = labels.long().to(device)
-
-            outputs = model((transform(input_image) if transform else  input_image).to(device))
-
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
-
-            if log_batches and (batch_id + 1) % 10 == 0:
-                print_progress_bar(batch_id / len(dataloader), running_loss / (batch_id + 1))
-
-        print(f"Epoch {epoch + 1}, Loss: {running_loss / len(dataloader)}")

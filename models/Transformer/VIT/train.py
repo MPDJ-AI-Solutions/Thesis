@@ -18,13 +18,9 @@ if __name__ == "__main__":
     model_handler = ModelFilesHandler()
     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
 
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize images to 224x224
-        transforms.Normalize(mean=[0.5] * 9, std=[0.5] * 9)  # Normalize for 9 channels
-    ])
 
-    train(criterion, device, epochs, model, optimizer, train_dataloader, transform)
-    measures = evaluate(criterion, device, model, test_dataloader, measurer, transform)
+    train(criterion, device, epochs, model, optimizer, train_dataloader,model_handler, log_batches=True)
+    measures = evaluate(criterion, device, model, test_dataloader, measurer)
 
     model_handler.save_model(
         model=model,

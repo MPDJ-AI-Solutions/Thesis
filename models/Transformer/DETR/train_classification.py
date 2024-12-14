@@ -19,7 +19,7 @@ if __name__ == "__main__":
     model_handler = ModelFilesHandler()
     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
 
-    train(criterion, device, epochs, model, optimizer, train_dataloader, log_batches = True)
+    train(criterion, device, epochs, model, optimizer, train_dataloader, model_handler, log_batches = True)
     measures = evaluate(criterion, device, model, test_dataloader, measurer)
 
     model_handler.save_model(
