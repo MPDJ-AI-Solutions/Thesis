@@ -11,30 +11,13 @@ from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
 from models.Tools.Measures.model_type import ModelType
 from models.Tools.Train.train_classifier import setup_dataloaders, setup_model, train, evaluate
 
-def create_datasets():
-    dataset_train = STARCOPDataset(
-        data_path=r"data",
-        data_type=DatasetType.EASY_TRAIN,
-        image_info_class=SegmentationDatasetInfo,
-        normalization=False
-    )
-
-    dataset_test = STARCOPDataset(
-        data_path=r"data",
-        data_type=DatasetType.EASY_TRAIN,
-        image_info_class=SegmentationDatasetInfo,
-        normalization=False
-    )
-
-    return dataset_train, dataset_test
-
 
 if __name__ == "__main__":
-    epochs = 100
+    epochs = 15
     device = "cuda" if torch.cuda.is_available() else "cpu"
     lr = 1e-4
 
-    train_dataloader, test_dataloader = setup_dataloaders(batch_size=80)
+    train_dataloader, test_dataloader = setup_dataloaders(batch_size=32, train_type=DatasetType.TRAIN)
     model = MethaNetClassifier()
     model, criterion, optimizer = setup_model(model, lr, device)
 
@@ -49,4 +32,4 @@ if __name__ == "__main__":
         metrics=measures,
         model_type=ModelType.CNN,
         epoch=epochs,
-        )
+    )
