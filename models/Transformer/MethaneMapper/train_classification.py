@@ -21,7 +21,7 @@ def train(criterion, device, epochs, model, optimizer, dataloader, model_handler
             optimizer.zero_grad()
 
             input_image = torch.cat((images, mag1c), dim=1).to(device)
-            filtered_image.to(device)
+            filtered_image = filtered_image.to(device)
             labels = labels.long().to(device)
 
             outputs = model(input_image, filtered_image)
@@ -63,60 +63,32 @@ def evaluate(criterion, device, model, dataloader, measurer):
     return measures
 
 
-# if __name__ == "__main__":
-#     epochs = 15
-#     device = "cuda" if torch.cuda.is_available() else "cpu"
-#     lr = 1e-4
-#
-#     train_dataloader, test_dataloader = setup_dataloaders(
-#         batch_size=4,
-#         image_info_class=MMClassifierDatasetInfo,
-#         crop_size=1,
-#         train_type=DatasetType.TRAIN,
-#     )
-#     model = TransformerModel(
-#         n_queries=5,
-#         n_decoder_layers=5,
-#         n_encoder_layers=5,
-#         d_model=256,
-#     )
-#     model, criterion, optimizer = setup_model(model, lr, device)
-#     model_handler = ModelFilesHandler()
-#     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
-#
-#     # Training
-#     print("Training...")
-#     train(criterion, device, epochs, model, optimizer, train_dataloader, model_handler, log_batches=True)
-#
-#     model_handler.save_raw_model(model)
-#
-#     # Validation
-#     print("Evaluating...")
-#     measures = evaluate(criterion, device, model, test_dataloader, measurer)
-#
-#     model_handler.save_model(
-#         model=model,
-#         metrics=measures,
-#         model_type=ModelType.TRANSFORMER_CLASSIFIER,
-#         epoch=epochs,
-#     )
-
 if __name__ == "__main__":
     epochs = 15
     device = "cuda" if torch.cuda.is_available() else "cpu"
     lr = 1e-4
 
     train_dataloader, test_dataloader = setup_dataloaders(
-        batch_size=2,
+        batch_size=4,
         image_info_class=MMClassifierDatasetInfo,
         crop_size=1,
         train_type=DatasetType.TRAIN,
     )
-
-    model_handler = ModelFilesHandler()
-    model, _, _, _ = model_handler.load_model(file_name=r"trained_models/model_transformer_classifier_2024_12_02_00_37_54.pickle")
+    model = TransformerModel(
+        n_queries=5,
+        n_decoder_layers=5,
+        n_encoder_layers=5,
+        d_model=256,
+    )
     model, criterion, optimizer = setup_model(model, lr, device)
+    model_handler = ModelFilesHandler()
     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
+
+    # Training
+    print("Training...")
+    train(criterion, device, epochs, model, optimizer, train_dataloader, model_handler, log_batches=True)
+
+    model_handler.save_raw_model(model)
 
     # Validation
     print("Evaluating...")
@@ -128,4 +100,32 @@ if __name__ == "__main__":
         model_type=ModelType.TRANSFORMER_CLASSIFIER,
         epoch=epochs,
     )
+
+# if __name__ == "__main__":
+#     epochs = 15
+#     device = "cuda" if torch.cuda.is_available() else "cpu"
+#     lr = 1e-4
+#
+#     train_dataloader, test_dataloader = setup_dataloaders(
+#         batch_size=2,
+#         image_info_class=MMClassifierDatasetInfo,
+#         crop_size=1,
+#         train_type=DatasetType.TRAIN,
+#     )
+#
+#     model_handler = ModelFilesHandler()
+#     model, _, _, _ = model_handler.load_model(file_name=r"trained_models/model_transformer_classifier_2024_12_02_00_37_54.pickle")
+#     model, criterion, optimizer = setup_model(model, lr, device)
+#     measurer = MeasureToolFactory.get_measure_tool(ModelType.TRANSFORMER)
+#
+#     # Validation
+#     print("Evaluating...")
+#     measures = evaluate(criterion, device, model, test_dataloader, measurer)
+#
+#     model_handler.save_model(
+#         model=model,
+#         metrics=measures,
+#         model_type=ModelType.TRANSFORMER_CLASSIFIER,
+#         epoch=epochs,
+#     )
 
