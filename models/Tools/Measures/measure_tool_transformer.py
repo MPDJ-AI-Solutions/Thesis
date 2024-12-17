@@ -1,6 +1,6 @@
 import torch
 import math
-from sklearn.metrics import roc_auc_score, matthews_corrcoef, accuracy_score
+from sklearn.metrics import roc_auc_score
 
 from .measure_tool import MeasureTool
 

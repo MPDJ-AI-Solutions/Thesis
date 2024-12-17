@@ -1,11 +1,10 @@
 import sys
-from typing import Optional, Type
-
 import torch
-from sklearn.model_selection import KFold
+
+from typing import Type
 from torch import nn
 from torch.utils.data import DataLoader, Subset
-from torchvision import transforms
+from sklearn.model_selection import KFold
 
 from dataset.dataset_info import ClassifierDatasetInfo, DatasetInfo
 from dataset.dataset_type import DatasetType

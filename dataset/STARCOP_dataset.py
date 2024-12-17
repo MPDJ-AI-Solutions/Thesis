@@ -1,7 +1,7 @@
 import os
-import pandas as pd
 import torch
 import torchvision
+import pandas as pd
 
 from torch.utils.data import Dataset, DataLoader
 

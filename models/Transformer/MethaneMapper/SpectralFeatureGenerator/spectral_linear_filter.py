@@ -1,9 +1,9 @@
 import torch
 import torch.multiprocessing as mp
+
 from sklearn.cluster import KMeans
 from torch import nn
 
-# TODO Ensure parallel version work like sequential
 
 class SpectralLinearFilter(nn.Module):
     """

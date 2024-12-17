@@ -1,7 +1,7 @@
-from typing import Tuple
-
 import torch
+
 from torch import nn
+from typing import Tuple
 
 
 class BBoxPrediction(nn.Module):

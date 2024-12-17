@@ -1,5 +1,4 @@
 import torch
-from torchvision import transforms
 
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
 from models.Tools.Measures.measure_tool_factory import MeasureToolFactory

@@ -1,5 +1,4 @@
 import torch
-from torchvision import transforms
 
 from models.Transformer.DETR.model import CustomDetrForClassification
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler

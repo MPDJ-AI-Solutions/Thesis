@@ -1,9 +1,6 @@
 import torch
 
-from dataset.STARCOP_dataset import STARCOPDataset
-from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-
 
 from models.Convolutional.MethaNet.model import MethaNetClassifier
 from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
@@ -13,7 +10,7 @@ from models.Tools.Train.train_classifier import setup_dataloaders, setup_model, 
 
 
 if __name__ == "__main__":
-    epochs = 15
+    epochs = 1
     device = "cuda" if torch.cuda.is_available() else "cpu"
     lr = 1e-4
 

@@ -1,7 +1,4 @@
-from typing import Optional
-
 import torch
-from torchvision import transforms
 
 from dataset.dataset_info import MMClassifierDatasetInfo
 from dataset.dataset_type import DatasetType
