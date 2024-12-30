@@ -2,10 +2,10 @@ import torch
 
 from dataset.dataset_info import MMClassifierDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
-from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.Measures.model_type import ModelType
-from models.Tools.Train.train_classifier import setup_model, setup_dataloaders_with_cross_validation, setup_dataloaders, \
+from files_handler.model_files_handler import ModelFilesHandler
+from measures import MeasureToolFactory
+from measures import ModelType
+from models.Tools.Train.train_classifier import setup_model, setup_dataloaders, \
     print_progress_bar
 from models.Transformer.MethaneMapper.model import TransformerModel
 

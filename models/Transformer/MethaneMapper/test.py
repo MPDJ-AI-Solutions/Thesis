@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+from files_handler import ModelFilesHandler
 
 if __name__ == '__main__':
     # Load original image

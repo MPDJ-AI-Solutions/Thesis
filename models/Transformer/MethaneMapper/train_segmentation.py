@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 from dataset.STARCOP_dataset import STARCOPDataset
 from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.Measures.model_type import ModelType
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+from measures import MeasureToolFactory
+from measures import ModelType
+from files_handler import ModelFilesHandler
 from models.Transformer.MethaneMapper.Segmentation.dice_loss import DiceLoss
 from models.Transformer.MethaneMapper.Segmentation.hungarian_matcher import HungarianMatcher
 

@@ -1,8 +1,8 @@
 import unittest
 import torch
 
-from models.Tools.Measures.model_type import ModelType
-from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
+from measures import ModelType
+from measures import MeasureToolFactory
 
 
 class MeasureToolCNNTests(unittest.TestCase):

@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
-from models.Tools.ImageFiltering.STARCOP_dataset_before_slf import STARCOPDatasetPreSLF
+from image_filtering.STARCOP_dataset_before_slf import STARCOPDatasetPreSLF
 from models.Transformer.MethaneMapper.SpectralFeatureGenerator.spectral_linear_filter import \
     SpectralLinearFilterParallel
 

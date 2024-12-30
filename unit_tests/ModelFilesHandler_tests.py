@@ -6,8 +6,8 @@ from unittest.mock import patch
 import pandas as pd
 
 
-from models.Tools.Measures.model_type import ModelType
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
+from measures import ModelType
+from files_handler import ModelFilesHandler
 from models.Transformer.MethaneMapper import TransformerModel
 
 

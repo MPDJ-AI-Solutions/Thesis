@@ -8,9 +8,9 @@ from dataset.dataset_info import SegmentationDatasetInfo
 from dataset.dataset_type import DatasetType
 from models.Transformer.DETR.model import CustomDetr
 
-from models.Tools.FilesHandler.model_files_handler import ModelFilesHandler
-from models.Tools.Measures.measure_tool_factory import MeasureToolFactory
-from models.Tools.Measures.model_type import ModelType
+from files_handler import ModelFilesHandler
+from measures import MeasureToolFactory
+from measures import ModelType
 
 
 def create_datasets():

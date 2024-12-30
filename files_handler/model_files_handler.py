@@ -6,8 +6,8 @@ from torch import nn
 from typing import Tuple
 from datetime import datetime
 
-from models.Tools.FilesHandler.model_wrapper import ModelWrapper
-from models.Tools.Measures.model_type import ModelType
+from files_handler.model_wrapper import ModelWrapper
+from measures.model_type import ModelType
 
 
 class ModelFilesHandler:
