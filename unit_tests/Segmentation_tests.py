@@ -25,9 +25,6 @@ class STARCOPDatasetTests(unittest.TestCase):
         assert_equal(confidence.shape, (bs, num_queries, 1))
         assert_equal(final_mask.shape, (bs, 1, H, W))
 
-        print("BBox_prediction shape: ", bbox.shape)
-        print("confidence shape:", confidence.shape)
-        print("final mask shape:", final_mask.shape)
 
 if __name__ == '__main__':
     unittest.main()

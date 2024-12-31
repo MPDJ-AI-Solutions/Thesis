@@ -7,7 +7,7 @@ from models.Transformer.MethaneMapper.Backbone.backbone import Backbone
 class BackboneTests(unittest.TestCase):
     def test_backbone_load_data(self):
         # Arrange
-        bs, ch, h, w = 16, 8, 256, 256
+        bs, ch, h, w = 16, 9, 256, 256
         out_channels = 2048
         d_model = 256
         hsi = torch.rand(bs, ch, h, w)
@@ -18,7 +18,7 @@ class BackboneTests(unittest.TestCase):
         result = backbone(hsi)
 
         # Assert
-        assert_equal(result.shape, (bs, d_model, int(h / 32), int(w / 32)))
+        assert_equal(result[0].shape, (bs, d_model, int(h / 32), int(w / 32)))
 
 if __name__ == '__main__':
     unittest.main()

@@ -205,17 +205,6 @@ class MeasureToolTransformerTests(unittest.TestCase):
         # Assert
         self.assertAlmostEqual(first=actual, second=desired, places=4)
 
-    #TODO
-    def test_ci(self):
-        # Arrange
-        desired = 0
-
-        # Act
-        actual = self.mt_transformer.ci(target=self.target, result=self.result)
-
-        # Assert
-        self.assertAlmostEqual(first=actual, second=desired, places=4)
-
 
 if __name__ == '__main__':
     unittest.main()

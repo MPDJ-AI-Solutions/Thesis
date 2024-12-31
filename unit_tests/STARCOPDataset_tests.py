@@ -8,7 +8,7 @@ class STARCOPDatasetTests(unittest.TestCase):
         # Arrange
         class TestDatasetInfo(DatasetInfo):
             @staticmethod
-            def load_tensor(path: str):
+            def load_tensor(path: str, grid_id:int=0, crop_size:int=1):
                 return path
 
         dataset = STARCOPDataset(data_path="data",

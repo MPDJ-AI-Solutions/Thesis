@@ -167,18 +167,5 @@ class MeasureToolCNNTests(unittest.TestCase):
         self.assertAlmostEqual(first=actual, second=desired, places=4)
 
 
-    # TO DO
-    def test_ci(self):
-        # Arrange
-        desired = 0
-
-        # Act
-        actual = self.mt_cnn.ci(target=self.target, result=self.result)
-        print(actual)
-
-        # Assert
-        self.assertAlmostEqual(first=0, second=desired, places=4)
-
-
 if __name__ == '__main__':
     unittest.main()

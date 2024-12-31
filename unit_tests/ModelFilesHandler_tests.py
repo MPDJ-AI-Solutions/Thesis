@@ -1,5 +1,5 @@
-import unittest
 import os
+import unittest
 from datetime import datetime
 from unittest.mock import patch
 
@@ -8,7 +8,7 @@ import pandas as pd
 
 from measures import ModelType
 from files_handler import ModelFilesHandler
-from models.Transformer.MethaneMapper import TransformerModel
+from models.Transformer.MethaneMapper.model import TransformerModel
 
 
 class ModelFilesHandlerTests(unittest.TestCase):

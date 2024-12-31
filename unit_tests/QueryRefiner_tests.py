@@ -3,7 +3,7 @@ import unittest
 import torch
 from numpy.ma.testutils import assert_equal
 
-from models.Transformer.MethaneMapper import QueryRefiner
+from models.Transformer.MethaneMapper.Transformer.query_refiner import QueryRefiner
 
 
 class QueryRefinerTests(unittest.TestCase):
@@ -22,7 +22,6 @@ class QueryRefinerTests(unittest.TestCase):
 
         # Assert
         assert_equal(q_ref.shape, (2, 100, 2048))
-        print("Refined Queries Shape:", q_ref.shape)  # Expected: (batch_size, num_queries, d_model)
 
 
 if __name__ == '__main__':
