@@ -10,13 +10,11 @@ from models.Transformer.MethaneMapper.Transformer.position_encoding import Posit
 class EncoderTests(unittest.TestCase):
     def test_Encoder(self):
         # Arrange
-        H, W = 256, 256
+        H, W = 512, 512
         d_model = 256
-        bs = 8
-        backbone_output = torch.rand(bs, int(H/32), int(W/32), d_model)
-        pos_encoder = PositionalEncodingMM(d_model=d_model)
+        bs = 2
 
-        encoder_input = pos_encoder(backbone_output)[0].flatten(2).permute(0, 2, 1)
+        encoder_input = torch.rand(bs, int(H/32) * int(W/32), d_model)
 
         model = Encoder(d_model=d_model, n_heads=8, num_layers=5)
 
