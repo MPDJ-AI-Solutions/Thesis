@@ -7,6 +7,14 @@ class Backbone(nn.Module):
     Class uses resnet-50 backbones to extract features from input RGB and SWIR images.
     """
     def __init__(self, rgb_channels: int = 3, swir_channels: int = 5, out_channels: int = 1024, d_model: int = 256):
+        """
+        Initializes the Backbone model.
+        Args:
+            rgb_channels (int): Number of input channels for the RGB backbone. Default is 3.
+            swir_channels (int): Number of input channels for the SWIR backbone. Default is 5.
+            out_channels (int): Number of output channels for the backbones and combined projection. Default is 1024.
+            d_model (int): Number of output channels for the final projection. Default is 256.
+        """
         super(Backbone, self).__init__()
         
         # RGB
@@ -21,6 +29,16 @@ class Backbone(nn.Module):
 
 
     def forward(self, hsi: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Forward pass of the model.
+
+        Args:
+            hsi (torch.Tensor): Input tensor with hyperspectral images. 
+        Returns:
+            tuple[torch.Tensor, torch.Tensor]: A tuple containing:
+                - d_model_projection (torch.Tensor): Tensor with shape (bs, d_model, h / 32, w / 32).
+                - combined_projection (torch.Tensor): Tensor with shape (bs, out_channels, h / 32, w / 32).
+        """
         # Input: Shape(bs, 3, h, w) Output: Shape(bs, out_channels, h / 32, w / 32)
         rgb_result = self.rgb_backbone(self._get_rgb(hsi=hsi))
 
@@ -41,14 +59,43 @@ class Backbone(nn.Module):
 
     @staticmethod
     def _get_rgb(hsi: torch.Tensor) -> torch.Tensor:
+        """
+        Extracts the RGB channels from an HSI (Hyperspectral Imaging) tensor.
+
+        Args:
+            hsi (torch.Tensor): A tensor containing hyperspectral image data with shape 
+                                (batch_size, channels, height, width).
+
+        Returns:
+            torch.Tensor: A tensor containing only the RGB channels with shape 
+                          (batch_size, 3, height, width).
+        """
         return hsi[:, :3, :, :]
 
 
     @staticmethod
     def _get_swir(hsi: torch.Tensor) -> torch.Tensor:
+        """
+        Extracts the Short-Wave Infrared (SWIR) bands from a hyperspectral image tensor.
+
+        Args:
+            hsi (torch.Tensor): A hyperspectral image tensor with shape (batch_size, num_channels, height, width).
+
+        Returns:
+            torch.Tensor: A tensor containing the SWIR bands (channels 3 to 7) of the input hyperspectral image.
+        """
         return hsi[:, 3:8, :, :]
 
     @staticmethod
     def _get_mag1c(hsi: torch.Tensor) -> torch.Tensor:
+        """
+        Extracts mag1c from the input hyperspectral image tensor.
+
+        Args:
+            hsi (torch.Tensor): A hyperspectral image tensor of shape (batch_size, channels, height, width).
+
+        Returns:
+            torch.Tensor: A tensor containing the extracted channel, with shape (batch_size, 1, height, width).
+        """
         return hsi[:, 8:9, :, :]
 

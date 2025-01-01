@@ -15,9 +15,10 @@ from .model_type import ModelType
 
 class TransformerModel(nn.Module):
     """
-    TODO docs, verification, tests
-    """
+    MethaneMapper (Transformer) model for various tasks such as classification, 
+    segmentation, and bounding box prediction for methane leakage in hyperspectral images. 
 
+    """
     def __init__(self,
                  d_model: int = 256,
                  backbone_out_channels: int = 2048,
@@ -30,6 +31,20 @@ class TransformerModel(nn.Module):
                  threshold: float = 0.5,
                  model_type: ModelType = ModelType.CLASSIFICATION,
                  ):
+        """
+        Initialize the TransformerModel.
+        Args:
+            d_model (int): Dimension of the model.
+            backbone_out_channels (int): Number of output channels from the backbone.
+            image_height (int): Height of the input image.
+            image_width (int): Width of the input image.
+            attention_heads (int): Number of attention heads.
+            n_encoder_layers (int): Number of encoder layers.
+            n_decoder_layers (int): Number of decoder layers.
+            n_queries (int): Number of queries.
+            threshold (float): Threshold value for predictions.
+            model_type (ModelType): Type of the model (CLASSIFICATION, SEGMENTATION, ONLY_BBOX).
+        """
         super(TransformerModel, self).__init__()
 
         self.d_model = d_model
@@ -66,7 +81,13 @@ class TransformerModel(nn.Module):
     def forward(self, image: torch.Tensor, filtered_image: torch.Tensor) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        TODO docs, tests
+        Forward pass of the model.
+        
+        Args:
+            image (torch.Tensor): Input hyperspectral image tensor.
+            filtered_image (torch.Tensor): SLF result tensor.
+        Returns:
+            tuple[torch.Tensor, torch.Tensor, torch.Tensor]: A tuple containing three tensors as the output of the model.
         """
         # get image size
         batch_size, channels, height, width = image.shape

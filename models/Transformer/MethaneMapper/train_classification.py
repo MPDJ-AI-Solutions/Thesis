@@ -11,6 +11,21 @@ from models.Transformer.MethaneMapper.model import TransformerModel
 
 
 def train(criterion, device, epochs, model, optimizer, dataloader, model_handler,  log_batches: bool = False):
+    """
+    Trains a given model using the specified criterion, optimizer, and dataloader. Specified for MethaneMapper
+    
+    Args:
+        criterion (torch.nn.Module): The loss function to be used.
+    device (torch.device): The device to run the training on (e.g., 'cpu' or 'cuda').
+        epochs (int): The number of epochs to train the model for.
+        model (torch.nn.Module): The model to be trained.
+        optimizer (torch.optim.Optimizer): The optimizer to use for updating the model parameters.
+        dataloader (torch.utils.data.DataLoader): The DataLoader providing the training data.
+        model_handler (object): An object responsible for saving the model.
+        log_batches (bool, optional): If True, logs progress every 10 batches. Defaults to False.
+    Returns:
+        None
+    """
     model.train()
     for epoch in range(epochs):  # Adjust the number of epochs
         running_loss = 0.0
@@ -21,6 +36,7 @@ def train(criterion, device, epochs, model, optimizer, dataloader, model_handler
             filtered_image = filtered_image.to(device)
             labels = labels.long().to(device)
 
+            # Change for MethaneMapper
             outputs = model(input_image, filtered_image)
 
             loss = criterion(outputs, labels)
@@ -36,6 +52,18 @@ def train(criterion, device, epochs, model, optimizer, dataloader, model_handler
 
 
 def evaluate(criterion, device, model, dataloader, measurer):
+    """
+    Evaluates the performance of a model on a given dataset for MethaneMapper model.
+    
+    Args:
+        criterion (torch.nn.Module): The loss function used to evaluate the model.
+        device (torch.device): The device (CPU or GPU) on which the model and data are located.
+        model (torch.nn.Module): The model to be evaluated.
+        dataloader (torch.utils.data.DataLoader): The DataLoader providing the evaluation data.
+        measurer (object): An object with a method `compute_measures` that calculates performance metrics.
+    Returns:
+        dict: A dictionary containing the computed performance measures.
+    """
     model.eval()
     all_predictions = []
     all_labels = []
@@ -46,6 +74,7 @@ def evaluate(criterion, device, model, dataloader, measurer):
         filtered_image = filtered_image.to(device)
         labels = labels.long().to(device)
 
+        # Change for MethaneMapper
         outputs = model(input_image, filtered_image)
 
         predictions = torch.argmax(outputs, dim=1)

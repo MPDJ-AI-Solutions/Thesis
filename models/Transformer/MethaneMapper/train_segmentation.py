@@ -27,6 +27,23 @@ def train(
         max_epoch:int,
         device: str = "cuda",
 ):
+    """
+    Train the Transformer model for one epoch.
+  
+    Args:
+        model (TransformerModel): The Transformer model to be trained.
+        dataloader (DataLoader): DataLoader providing the training data.
+        criterion_bbox: Loss function for bounding box regression.
+        criterion_confidence: Loss function for confidence prediction.
+        criterion_mask: Loss function for mask prediction (currently not used).
+        matcher: Matcher object to match predicted and target bounding boxes and confidences.
+        optimizer (torch.optim.Optimizer): Optimizer for updating model parameters.
+        epoch (int): Current epoch number.
+        max_epoch (int): Total number of epochs.
+        device (str, optional): Device to run the training on. Default is "cuda".
+    Returns:
+        float: Average loss for the epoch.
+    """
     model.train()  # Set model to training mode
     running_loss = 0.0
     running_loss_bbox = 0.0
@@ -127,6 +144,22 @@ def evaluate(
         measurer,
         device="cuda"
 ):
+    """
+    Evaluate the performance of the model on the given dataloader.
+
+    Args:
+        model (torch.nn.Module): The model to evaluate.
+        dataloader (torch.utils.data.DataLoader): DataLoader providing the evaluation data.
+        criterion_bbox (callable): Loss function for bounding box regression.
+        criterion_confidence (callable): Loss function for confidence prediction.
+        criterion_mask (callable): Loss function for mask prediction.
+        matcher (object): Object responsible for matching predicted and target bounding boxes.
+        measurer (object): Object responsible for computing evaluation metrics.
+        device (str, optional): Device to run the evaluation on. Default is "cuda".
+    Returns:
+        float: Average loss over the evaluation dataset.
+        dict: Dictionary containing evaluation metrics.
+    """
     model.eval()  # Set model to evaluation mode
 
     all_predictions: list = []

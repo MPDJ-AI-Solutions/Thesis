@@ -3,14 +3,36 @@ from scipy.optimize import linear_sum_assignment
 
 
 class HungarianMatcher:
+    """
+    HungarianMatcher is a class that performs Hungarian matching for object detection tasks.
+    """
+
     def __init__(self, bbox_cost: float = 1.0, confidence_cost: float = 1.0, iou_cost: float = 1.0):
+        """
+        Initializes the HungarianMatcher with the given costs.
+
+        Args:
+            bbox_cost (float): The cost associated with bounding box matching. Default is 1.0.
+            confidence_cost (float): The cost associated with confidence score matching. Default is 1.0.
+            iou_cost (float): The cost associated with Intersection over Union (IoU) matching. Default is 1.0.
+        """
         self.bbox_cost = bbox_cost
         self.confidence_cost = confidence_cost
         self.iou_cost = iou_cost
 
     @staticmethod
     def compute_iou(pred_boxes, target_boxes):
-        """Compute IoU between predicted and target boxes."""
+        """
+        Compute the Intersection over Union (IoU) between predicted and target bounding boxes.
+        
+        Args:
+            pred_boxes (torch.Tensor): Tensor of shape (N, 4) containing N predicted bounding boxes.
+                                       Each box is represented by [x1, y1, x2, y2].
+            target_boxes (torch.Tensor): Tensor of shape (N, 4) containing N target bounding boxes.
+                                         Each box is represented by [x1, y1, x2, y2].
+        Returns:
+            torch.Tensor: Tensor of shape (N,) containing the IoU for each pair of predicted and target boxes.
+        """
         x1 = torch.max(pred_boxes[:, 0], target_boxes[:, 0])
         y1 = torch.max(pred_boxes[:, 1], target_boxes[:, 1])
         x2 = torch.min(pred_boxes[:, 2], target_boxes[:, 2])
@@ -24,7 +46,17 @@ class HungarianMatcher:
         return iou
 
     def match(self, pred_boxes, target_boxes, pred_confidence=None, target_confidence=None):
-        """Perform Hungarian matching."""
+        """
+        Matches predicted bounding boxes to target bounding boxes using the Hungarian algorithm.
+        
+        Args:
+            pred_boxes (torch.Tensor): Tensor of shape (batch_size, num_pred_boxes, 4) containing the predicted bounding boxes.
+            target_boxes (torch.Tensor): Tensor of shape (batch_size, num_target_boxes, 4) containing the target bounding boxes.
+            pred_confidence (torch.Tensor, optional): Tensor of shape (batch_size, num_pred_boxes, 1) containing the confidence scores for the predicted bounding boxes. Default is None.
+            target_confidence (torch.Tensor, optional): Tensor of shape (batch_size, num_target_boxes, 1) containing the confidence scores for the target bounding boxes. Default is None.
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: Two tensors containing the indices of the matched predicted and target bounding boxes for each batch item.
+        """
         batch_size = pred_boxes.size(0)
 
         # Initialize empty lists to store indices

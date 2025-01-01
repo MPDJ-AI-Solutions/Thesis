@@ -7,9 +7,17 @@ from torch import nn
 
 class SpectralLinearFilter(nn.Module):
     """
-    TODO: COMMENT
+    A PyTorch module for spectral linear filtering of hyperspectral images to detect methane concentration.
     """
+
     def __init__(self, num_classes: int = 20, min_class_size: int = 10000):
+        """
+        Initializes the SpectralLinearFilter with the specified number of classes and minimum class size.
+
+        Args:
+            num_classes (int): The number of classes to generate. Default is 20.
+            min_class_size (int): The minimum size of each class. Default is 10000.
+        """
         super(SpectralLinearFilter, self).__init__()
         self.num_classes = num_classes
         self.min_class_size = min_class_size
@@ -17,6 +25,17 @@ class SpectralLinearFilter(nn.Module):
 
     @staticmethod
     def compute_segmentation(image: torch.Tensor, num_classes) -> torch.Tensor:
+        """
+        Computes the segmentation mask for a given image using K-means clustering.
+
+        Args:
+            image (torch.Tensor): The input image tensor of shape (H, W, C), where H is the height,
+                                  W is the width, and C is the number of channels.
+            num_classes (int): The number of clusters/classes for segmentation.
+        Returns:
+            torch.Tensor: A tensor containing the segmentation mask of shape (H, W), where each
+                          pixel value represents the cluster/class it belongs to.
+        """
         pixels = image.to("cpu").contiguous().view(-1, image.size(2))
         kmeans = KMeans(n_clusters=num_classes, random_state=0)
         segmentation_mask = kmeans.fit_predict(pixels).reshape(image.shape[0], image.shape[1])
@@ -25,6 +44,15 @@ class SpectralLinearFilter(nn.Module):
 
     @staticmethod
     def compute_covariance(pixels: torch.Tensor, mean_vector) -> torch.Tensor:
+        """
+        Compute the covariance matrix of the given pixel data.
+
+        Args:
+            pixels (torch.Tensor): A tensor containing pixel data with shape (num_pixels, num_features).
+            mean_vector (torch.Tensor): A tensor containing the mean vector with shape (num_features,).
+        Returns:
+            torch.Tensor: The covariance matrix with shape (num_features, num_features).
+        """
         num_pixels = len(pixels)
         centered_pixels = pixels - mean_vector
         covariance = (centered_pixels.T @ centered_pixels) / num_pixels
@@ -35,6 +63,17 @@ class SpectralLinearFilter(nn.Module):
 
     @staticmethod
     def spectral_linear_filter(pixel_spectrum, mean_vector, inv_covariance_matrix, methane_pattern) -> torch.Tensor:
+        """
+        Applies a spectral linear filter to the given pixel spectrum.
+
+        Args:
+            pixel_spectrum (torch.Tensor): The spectrum of the pixel to be filtered.
+            mean_vector (torch.Tensor): The mean vector of the spectra.
+            inv_covariance_matrix (torch.Tensor): The inverse covariance matrix of the spectra.
+            methane_pattern (torch.Tensor): The pattern vector for methane detection.
+        Returns:
+            torch.Tensor: The result of the spectral linear filter applied to the pixel spectrum.
+        """
         centered_spectrum = pixel_spectrum - mean_vector
         numerator = (centered_spectrum.T @ inv_covariance_matrix @ methane_pattern)
         denominator = torch.sqrt(methane_pattern.T @ inv_covariance_matrix @ methane_pattern)
@@ -42,6 +81,16 @@ class SpectralLinearFilter(nn.Module):
 
 
     def forward(self, hyperspectral_image, methane_pattern) -> torch.Tensor:
+        """
+        Forward pass for the spectral linear filter.
+
+        Args:
+            hyperspectral_image (torch.Tensor): A 4D tensor of shape (batch_size, num_channels, height, width)
+                representing the hyperspectral images.
+            methane_pattern (numpy.ndarray or list): A 1D array or list representing the methane pattern.
+        Returns:
+            torch.Tensor: A 3D tensor of shape (batch_size, height, width) representing the methane concentration maps.
+        """
         batch_size, num_channels, height, width = hyperspectral_image.shape
         hyperspectral_image = hyperspectral_image.contiguous()
         methane_pattern = torch.FloatTensor(methane_pattern)
@@ -110,6 +159,16 @@ class SpectralLinearFilterParallel(SpectralLinearFilter):
         return batch, methane_concentration_map
 
     def forward(self, hyperspectral_image, methane_pattern) -> torch.Tensor:
+        """
+        Forward pass for the spectral linear filter.
+        
+        Args:
+            hyperspectral_image (torch.Tensor): A 4D tensor of shape (batch_size, num_channels, height, width)
+                representing the hyperspectral images.
+            methane_pattern (numpy.ndarray or list): A 1D array or list representing the methane pattern.
+        Returns:
+            torch.Tensor: A 3D tensor of shape (batch_size, height, width) representing the methane concentration maps.
+        """
         batch_size, num_channels, height, width = hyperspectral_image.shape
         hyperspectral_image = hyperspectral_image.contiguous()
         methane_pattern = torch.FloatTensor(methane_pattern)

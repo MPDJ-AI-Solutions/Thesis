@@ -3,7 +3,20 @@ from transformers import DetrConfig, DetrForSegmentation, DetrForObjectDetection
 
 
 class CustomDetr(nn.Module):
+    """
+    Custom DETR (Detection Transformer) model for segmentation tasks with a modified backbone to accept hyperspectral images.
+    """
+    
     def __init__(self, detr_model_name="facebook/detr-resnet-50", num_channels=9):
+        """
+        Initializes the custom DETR model for segmentation with a modified backbone to accept a specified number of input channels.
+        
+        Args:
+            detr_model_name (str): The name of the pre-trained DETR model to load. Default is "facebook/detr-resnet-50".
+            num_channels (int): The number of input channels for the first convolutional layer of the backbone. Default is 9.
+        Attributes:
+            detr (DetrForSegmentation): The DETR model for segmentation with the modified backbone.
+        """
         super().__init__()
 
         # Load pre-trained DETR model
@@ -40,11 +53,34 @@ class CustomDetr(nn.Module):
                 param.requires_grad = False
 
     def forward(self, pixel_values, labels):
+        """
+        Forward pass for the DETR model.
+
+        Args:
+            pixel_values (torch.Tensor): Input tensor containing hsi.
+            labels (torch.Tensor): Labels for the input data.
+
+        Returns:
+            torch.Tensor: Output tensor from the DETR model.
+        """
         return self.detr(pixel_values, labels = labels)
 
 
 class CustomDetrForClassification(nn.Module):
+    """
+    Custom DETR model for classification tasks.
+    This class modifies a pre-trained DETR model to accept hyperspectral image as input 
+    and adds a classification head for methane leakage detection task.
+    """
     def __init__(self, detr_model_name="facebook/detr-resnet-50", num_channels=9, num_classes=2):
+        """
+        Initializes the custom DETR model with a modified backbone and classification head.
+        
+        Args:
+            detr_model_name (str): The name of the pre-trained DETR model to load. Default is "facebook/detr-resnet-50".
+            num_channels (int): The number of input channels for the first convolutional layer. Default is 9.
+            num_classes (int): The number of classification labels. Default is 2.
+        """
         super().__init__()
 
         # Load pre-trained DETR model
@@ -81,6 +117,14 @@ class CustomDetrForClassification(nn.Module):
         self.classifier = nn.Linear(hidden_size, num_classes)
 
     def forward(self, pixel_values):
+        """
+        Forward pass of the DETR model.
+        
+        Args:
+            pixel_values (torch.Tensor): Input tensor containing HSI of shape (batch_size, channels, height, width).
+        Returns:
+            torch.Tensor: Logits tensor of shape (batch_size, num_classes) representing the classification scores.
+        """
         # Pass inputs through DETR backbone and transformer
         outputs = self.detr.model(pixel_values)
 

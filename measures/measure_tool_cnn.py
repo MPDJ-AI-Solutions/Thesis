@@ -5,8 +5,22 @@ from .measure_tool import MeasureTool
 from sklearn.metrics import roc_auc_score
 
 class MeasureToolCNN(MeasureTool):
+    """
+    MeasureToolCNN is a class that provides various static methods to calculate different performance metrics for a CNN model.
+    """
+    
     @staticmethod
     def tp(result: torch.Tensor, target: torch.Tensor) -> float:
+        """
+        Calculate the true positive rate (TPR) for binary classification.
+
+        Args:
+            result (torch.Tensor): The predicted labels tensor, where each element is either 0 or 1.
+            target (torch.Tensor): The ground truth labels tensor, where each element is either 0 or 1.
+
+        Returns:
+            float: The true positive rate, which is the ratio of true positives to the total number of predictions.
+        """
         return ((result == 1) & (target == 1)).float().sum().item() / result.size(0)
 
 

@@ -14,6 +14,18 @@ from measures import ModelType
 
 
 def create_datasets():
+    """
+    Creates and returns training and testing datasets for segmentation.
+    This function initializes two instances of the STARCOPDataset class:
+    one for training and one for testing. Both datasets use the 
+    SegmentationDatasetInfo class for image information and do not apply 
+    normalization.
+    
+    Returns:
+        tuple: A tuple containing two elements:
+            - dataset_train (STARCOPDataset): The training dataset.
+            - dataset_test (STARCOPDataset): The testing dataset.
+    """
     dataset_train = STARCOPDataset(
         data_path=r"data",
         data_type=DatasetType.EASY_TRAIN,

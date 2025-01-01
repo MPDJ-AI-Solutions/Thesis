@@ -4,7 +4,17 @@ from torchvision.transforms import transforms
 
 
 class CustomViT(nn.Module):
+    """
+    Custom Vision Transformer (ViT) model for methane leakage detection.
+    """
     def __init__(self, num_channels=9, num_classes=2):
+        """
+        Initializes the CustomViT model.
+        
+        Args:
+            num_channels (int, optional): Number of input channels. Default is 9.
+            num_classes (int, optional): Number of output classes. Default is 2.
+        """
         super(CustomViT, self).__init__()
         # Load pre-trained ViT model
         self.vit = vit_b_16(weights=None)  # Use pretrained weights if desired
@@ -27,6 +37,15 @@ class CustomViT(nn.Module):
         self.normalize = transforms.Normalize(mean=[0.5] * num_channels, std=[0.5] * num_channels)
 
     def forward(self, x):
+        """
+        Forward pass of the model.
+
+        Args:
+            x (torch.Tensor): Input tensor to the model.
+
+        Returns:
+            torch.Tensor: Output tensor after passing through the Vision Transformer (ViT) model.
+        """
         x = self.resize(x)
         x = self.normalize(x)
         return self.vit(x)

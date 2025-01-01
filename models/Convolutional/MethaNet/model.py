@@ -2,6 +2,9 @@ import torch.nn as nn
 
 
 class MethaNetClassifier(nn.Module):
+    """
+    Convolutional neural network for methane leakage classification tasks based on MethaNet model.
+    """
     def __init__(self, in_channels:int = 9, num_classes:int = 2):
         super(MethaNetClassifier, self).__init__()
         self.pre_conv = nn.Sequential(
@@ -45,6 +48,15 @@ class MethaNetClassifier(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Defines the forward pass of the network.
+
+        Args:
+            x (torch.Tensor): Input tensor representing hyperspectral image.
+
+        Returns:
+            torch.Tensor: Model output.
+        """
         x = self.pre_conv(x)
         x = self.conv_layers(x)
         x = self.fc_layers(x)

@@ -13,6 +13,19 @@ from models.Transformer.MethaneMapper.SpectralFeatureGenerator.spectral_linear_f
 
 
 def generate_images(data_type):
+    """
+    Generates filtered images using a spectral linear filter and saves the results.
+     The function performs the following steps:
+    1. Initializes a dataset of type `STARCOPDatasetPreSLF` with the given `data_type`.
+    2. Creates a DataLoader to iterate over the dataset in batches.
+    3. Initializes a `SpectralLinearFilterParallel` model for image filtering.
+    4. Sets the model to evaluation mode and processes each batch of images without computing gradients.
+    5. Applies the spectral linear filter to each image in the batch using a predefined methane pattern.
+    6. Saves the processed images as `.npy` files in the same directory as the original images, with filenames indicating the result of the spectral linear filter.
+    
+    Args:
+        data_type (str): The type of data to be processed, used to initialize the dataset.
+    """
     methane_pattern = [0, 0, 0, 0.1, 0.3, 0.6, 0.8, 0.7]
 
     dataset = STARCOPDatasetPreSLF(

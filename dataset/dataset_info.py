@@ -7,10 +7,24 @@ import numpy as np
 
 class DatasetInfo:
     """
-    Class used to gather associated information about a data record.
+    A base class used to load and process hyper-spectral images.    
     """
     @staticmethod
     def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
+        """
+        Loads hyper-spectral images from path.
+
+        Args:
+            path (str): The directory path where the data files are located.
+            grid_id (int, optional): The grid identifier for cropping the images. Defaults to 0.
+            crop_size (int, optional): The size of the crop grid. Defaults to 1.
+        Returns:
+            tuple: A tuple containing the following tensors:
+                - tensor_AVIRIS (torch.Tensor): The tensor containing AVIRIS images.
+                - tensor_mag1c (torch.Tensor): The tensor containing the mag1c image.
+                - tensor_filtered_image (torch.Tensor): The tensor containing the filtered image.
+                - tensor_labels_binary (torch.Tensor): The tensor containing the pixel labels.
+        """
         images_AVIRIS = [
             cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
         ]
@@ -41,13 +55,23 @@ class DatasetInfo:
 
 
 class ClassifierDatasetInfo(DatasetInfo):
+    """
+    Class used to load hyperspectral images for classification tasks.
+    """
     @staticmethod
     def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
         """
-        Loads tensor....
+        Loads hyper-spectral images from path for classification task.
 
-        - path: str
-
+        Args:
+            path (str): The directory path where the data files are located.
+            grid_id (int, optional): The grid identifier for cropping the images. Defaults to 0.
+            crop_size (int, optional): The size of the crop grid. Defaults to 1.
+        Returns:
+            tuple: A tuple containing the following tensors:
+                - tensor_AVIRIS (torch.Tensor): The tensor containing AVIRIS images.
+                - tensor_mag1c (torch.Tensor): The tensor containing the mag1c image.
+                - tensor_labels_binary (torch.Tensor): The tensor containing the binary labels based on pixel labels.
         """
         tensor_AVIRIS, tensor_mag1c, _, tensor_labels_binary = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
@@ -55,21 +79,51 @@ class ClassifierDatasetInfo(DatasetInfo):
 
 
 class MMClassifierDatasetInfo(DatasetInfo):
+    """
+    Class used to load hyperspectral images for classification tasks for custom MethaneMapper architecture.
+    """
     @staticmethod
     def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
+        """
+        Loads hyper-spectral images from path for classification task with filtered image necessary for MethaneMapper model.
+
+        Args:
+            path (str): The directory path where the data files are located.
+            grid_id (int, optional): The grid identifier for cropping the images. Defaults to 0.
+            crop_size (int, optional): The size of the crop grid. Defaults to 1.
+        Returns:
+            tuple: A tuple containing the following tensors:
+                - tensor_AVIRIS (torch.Tensor): The tensor containing AVIRIS images.
+                - tensor_mag1c (torch.Tensor): The tensor containing the mag1c image.
+                - filtered_image (torch.Tensor): The tensor containing the prefiltered image for SFG block. 
+                - tensor_labels_binary (torch.Tensor): The tensor containing the binary labels based on pixel labels.
+        """
         tensor_AVIRIS, tensor_mag1c, filtered_image, tensor_labels_binary = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
         return tensor_AVIRIS, tensor_mag1c, filtered_image, torch.any(tensor_labels_binary == 1),
 
 
 class SegmentationDatasetInfo(DatasetInfo):
+    """
+    Class used to load hyperspectral images for segmentation tasks.
+    """
     @staticmethod
     def load_tensor(path: str, grid_id: int = 0, crop_size: int = 1):
         """
-        Loads tensor....
+        Loads hyper-spectral images from path for segmentation task - with added bbox. 
 
-        - path: str
-
+        Args:
+            path (str): The directory path where the data files are located.
+            grid_id (int, optional): The grid identifier for cropping the images. Defaults to 0.
+            crop_size (int, optional): The size of the crop grid. Defaults to 1.
+        Returns:
+            tuple: A tuple containing the following tensors:
+                - tensor_AVIRIS (torch.Tensor): The tensor containing AVIRIS images.
+                - tensor_mag1c (torch.Tensor): The tensor containing the mag1c image.
+                - tensor_filtered_image (torch.Tensor): The tensor containing the prefiltered image for SFG block. 
+                - tensor_tensor_binary_masks (torch.Tensor): The tensor containing pixel labels.
+                - tensor_bboxes (torch.Tensor): The tensor containing computed bounding boxes.
+                - tensor_bboxes_labels (torch.Tensor): The tensor containing mask for valid bboxes and zeros. 
         """
         tensor_AVIRIS, tensor_mag1c, tensor_filtered_image, tensor_labels_binary  = DatasetInfo.load_tensor(path, grid_id, crop_size)
 
@@ -81,14 +135,13 @@ class SegmentationDatasetInfo(DatasetInfo):
     @staticmethod
     def add_bbox(image, height, width, num_queries = 10):
         """
-            Extract bounding boxes and labels from an image using contours.
+            Extract bounding boxes and labels from an image using CV2 contours.
 
             Args:
                 image (numpy.ndarray): Binary mask image (H, W).
                 height (int): Height of the image.
                 width (int): Width of the image.
                 num_queries (int): Maximum number of queries (default=100).
-
             Returns:
                 result_bbox (torch.Tensor): Normalized bounding boxes (num_queries, 4).
                 result_labels (torch.Tensor): Labels for each query (num_queries).

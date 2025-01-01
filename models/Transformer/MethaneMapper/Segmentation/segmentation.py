@@ -3,6 +3,11 @@ import torch.nn as nn
 
 
 class BoxAndMaskPredictor(nn.Module):
+    """
+    BoxAndMaskPredictor is a neural network module designed for predicting bounding boxes, confidence scores, 
+    and segmentation masks from input feature maps. It utilizes a combination of feed-forward networks (FFNs) 
+    and attention mechanisms to generate these predictions.
+    """
     def __init__(
             self, result_height: int,
             result_width: int,
@@ -11,6 +16,20 @@ class BoxAndMaskPredictor(nn.Module):
             num_heads: int = 8,
             threshold: float = 0.5
     ):
+        """
+            Initializes the BoxAndMaskPredictor.
+            
+            Args:
+                result_height (int): The height of the result, must be divisible by 32.
+                result_width (int): The width of the result, must be divisible by 32.
+                embedding_dim (int): The dimension of the embedding.
+                fpn_channels (int): The number of channels in the Feature Pyramid Network.
+                num_heads (int, optional): The number of attention heads. Default is 8.
+                threshold (float, optional): The threshold for confidence score. Default is 0.5.
+            Raises:
+                AssertionError: If result_height or result_width is not divisible by 32.
+            """
+        
         # Ensure result_height and result_width are divisible by 32
         assert result_height % 32 == 0 and result_width % 32 == 0, "result_height and result_width must be divisible by 32"
 
@@ -97,6 +116,18 @@ class BoxAndMaskPredictor(nn.Module):
                     nn.init.zeros_(m.bias)
 
     def forward(self, e_out: torch.Tensor, fe: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Forward pass for the segmentation model.
+        
+        Args:
+            e_out (torch.Tensor): Encoder output tensor of shape (batch_size, num_queries, feature_dim).
+            fe (torch.Tensor): Feature tensor of shape (batch_size, num_queries, feature_dim).
+        Returns:
+            tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                - bbox_predictions (torch.Tensor): Bounding box predictions of shape (batch_size, num_queries, 4).
+                - confidence_scores (torch.Tensor): Confidence scores of shape (batch_size, num_queries, 1).
+                - mask_heatmaps (torch.Tensor): Mask heatmaps of shape (batch_size, fpn_channels, result_height, result_width).
+        """
         bbox_predictions = self.bbox_head(e_out)
         bbox_predictions = bbox_predictions * 0.1  # Scale gradients
         bbox_predictions[:, :2] = torch.sigmoid(bbox_predictions[:, :2]) * 512# Clamp x, y to [0, 1]

@@ -7,6 +7,12 @@ class FeatureExtractor(nn.Module):
     Feature extractor for single-channel filtered images using ResNet-50.
     """
     def __init__(self, d_model: int = 256):
+        """
+        Initializes the FeatureExtractor class.
+        
+        Args:
+            d_model (int, optional): The number of output channels for the projection layer. Defaults to 256.
+        """
         super(FeatureExtractor, self).__init__()
         self.resnet = torchvision.models.resnet50(weights=torchvision.models.ResNet50_Weights.IMAGENET1K_V1)
         
@@ -30,5 +36,14 @@ class FeatureExtractor(nn.Module):
 
 
     def forward(self, filtered_image: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass for the feature extractor.
+
+        Args:
+            filtered_image (torch.Tensor): The input tensor representing the filtered image.
+
+        Returns:
+            torch.Tensor: The output tensor after processing through the CNN backbone and projection layer.
+        """
         cnn_features = self.cnn_backbone(filtered_image)
         return self.project(cnn_features)
