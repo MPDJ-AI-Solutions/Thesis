@@ -42,7 +42,7 @@ def generate_images(data_type):
         for batch_idx, (images, file_paths) in enumerate(dataloader):
             processed_images = model(images, methane_pattern)
             for img, file_path in zip(processed_images, file_paths):
-                save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result.npy")
+                save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result_new.npy")
 
                 img_np = img.cpu().numpy()
                 np.save(save_path, img_np)

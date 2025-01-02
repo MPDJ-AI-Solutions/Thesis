@@ -29,7 +29,7 @@ class DatasetInfo:
             cv2.imread(file, cv2.IMREAD_UNCHANGED) for file in glob.glob(os.path.join(path, "TOA_AVIRIS*.tif"))
         ]
 
-        filtered_image_path = os.path.join(path, "slf_result.npy")
+        filtered_image_path = os.path.join(path, "slf_result_new.npy")
         if os.path.isfile(filtered_image_path):
             filtered_image = np.load(filtered_image_path)
         else:
@@ -146,26 +146,30 @@ class SegmentationDatasetInfo(DatasetInfo):
                 result_bbox (torch.Tensor): Normalized bounding boxes (num_queries, 4).
                 result_labels (torch.Tensor): Labels for each query (num_queries).
         """
-        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        result_bbox = torch.zeros((num_queries, 4), dtype=torch.float32)
-        result_labels = torch.zeros((num_queries,), dtype=torch.int64)
-        result_masks = torch.zeros((num_queries, width, height ), dtype=torch.uint8)
-
-        for i, contour in enumerate(contours[:num_queries]):
-            x, y, w, h = cv2.boundingRect(contour)
-
-            cx = (x + w / 2) / width
-            cy = (y + h / 2) / height
-            w_scaled = w / width
-            h_scaled = h / height
-
-            result_bbox[i, :] = torch.tensor([cx, cy, w_scaled, h_scaled], dtype=torch.float32)
-            result_labels[i] = 1
-
-            mask = image[y:y + h, x:x + w]  # The region of the object in the original mask
-
-            # Store the mask for the current object (scaled to the full image)
-            result_masks[i, y:y + h, x:x + w] = torch.tensor(mask, dtype=torch.float32) / 255.0
-
-        return result_bbox, result_labels, result_masks
+        return None, None, None
+        # binary_array = image.squeeze(0)
+        # binary_array = (binary_array * 255).astype(np.uint8)
+        # print(binary_array.shape)
+        # contours, _ = cv2.findContours(binary_array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        #
+        # result_bbox = torch.zeros((num_queries, 4), dtype=torch.float32)
+        # result_labels = torch.zeros((num_queries,), dtype=torch.int64)
+        # result_masks = torch.zeros((num_queries, width, height ), dtype=torch.uint8)
+        #
+        # for i, contour in enumerate(contours[:num_queries]):
+        #     x, y, w, h = cv2.boundingRect(contour)
+        #
+        #     cx = (x + w / 2) / width
+        #     cy = (y + h / 2) / height
+        #     w_scaled = w / width
+        #     h_scaled = h / height
+        #
+        #     result_bbox[i, :] = torch.tensor([cx, cy, w_scaled, h_scaled], dtype=torch.float32)
+        #     result_labels[i] = 1
+        #
+        #     mask = image[y:y + h, x:x + w]  # The region of the object in the original mask
+        #
+        #     # Store the mask for the current object (scaled to the full image)
+        #     result_masks[i, y:y + h, x:x + w] = torch.tensor(mask, dtype=torch.float32) / 255.0
+        #
+        # return result_bbox, result_labels, result_masks
