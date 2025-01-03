@@ -1,7 +1,7 @@
 @echo off
 
 :: Define virtual environment directory
-set VENV_DIR=xc
+set VENV_DIR=venv
 
 :: Uninstall existing virtual environment
 if exist %VENV_DIR% (
