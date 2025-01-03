@@ -26,7 +26,7 @@ def generate_images(data_type):
     Args:
         data_type (str): The type of data to be processed, used to initialize the dataset.
     """
-    methane_pattern = [0, 0, 0, 0.1, 0.3, 0.6, 0.8, 0.7]
+    methane_pattern = [0.1, 0.3, 0.6, 0.8, 0.7, 0, 0, 0]
 
     dataset = STARCOPDatasetPreSLF(
         r"data",
@@ -42,7 +42,7 @@ def generate_images(data_type):
         for batch_idx, (images, file_paths) in enumerate(dataloader):
             processed_images = model(images, methane_pattern)
             for img, file_path in zip(processed_images, file_paths):
-                save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result_new.npy")
+                save_path = Path(os.path.join(file_path, Path(file_path).stem)).with_name(f"slf_result_new1.npy")
 
                 img_np = img.cpu().numpy()
                 np.save(save_path, img_np)
@@ -50,4 +50,4 @@ def generate_images(data_type):
 
 
 if __name__ == '__main__':
-    generate_images(data_type=DatasetType.TRAIN)
+    generate_images(data_type=DatasetType.TEST)

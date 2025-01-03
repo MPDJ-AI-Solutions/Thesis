@@ -70,7 +70,7 @@ class Backbone(nn.Module):
             torch.Tensor: A tensor containing only the RGB channels with shape 
                           (batch_size, 3, height, width).
         """
-        return hsi[:, :3, :, :]
+        return hsi[:, 5:8, :, :]
 
 
     @staticmethod
@@ -84,7 +84,7 @@ class Backbone(nn.Module):
         Returns:
             torch.Tensor: A tensor containing the SWIR bands (channels 3 to 7) of the input hyperspectral image.
         """
-        return hsi[:, 3:8, :, :]
+        return hsi[:, :5, :, :]
 
     @staticmethod
     def _get_mag1c(hsi: torch.Tensor) -> torch.Tensor:

@@ -44,7 +44,7 @@ class STARCOPDatasetPreSLF(Dataset):
         Returns:
             bool: True if the processed file exists, False otherwise.
         """
-        processed_file_path = Path(self.images_path) / img_id / "slf_result.npy"
+        processed_file_path = Path(self.images_path) / img_id / "slf_result_new1.npy"
         return processed_file_path.exists()
 
     def __len__(self):
