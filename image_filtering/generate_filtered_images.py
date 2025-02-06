@@ -50,4 +50,17 @@ def generate_images(data_type):
 
 
 if __name__ == '__main__':
-    generate_images(data_type=DatasetType.TEST)
+    try:
+        generate_images(data_type=DatasetType.TEST)
+    except ValueError as e: 
+        print("No images to process in TEST")
+
+    try: 
+        generate_images(data_type=DatasetType.TRAIN)
+    except ValueError as e: 
+        print("No images to process in TRAIN")
+
+    try:  
+        generate_images(data_type=DatasetType.EASY_TRAIN)
+    except ValueError as e: 
+        print("No images to process in TRAIN EASY")
